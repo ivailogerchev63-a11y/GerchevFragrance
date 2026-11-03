@@ -1,34 +1,47 @@
 @model MVC.Intro.Models.CartViewModel
 @{
-    ViewData["Title"] = "Количка";
+    ViewData["Title"] = "Вашата Количка";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<section style="padding: 80px 0 120px;">
+<section style="padding: 60px 0 100px; min-height: 75vh;">
     <div class="container">
         <div class="text-center mb-5">
-            <p style="color:#C9A84C; letter-spacing:5px; text-transform:uppercase; font-size:0.72rem;">
-                — Вашата —
+            <p style="color:var(--gold); letter-spacing:4px; text-transform:uppercase; font-size:0.75rem;">
+                — Селекция —
             </p>
-            <h1 style="font-family:'Playfair Display',serif; font-size:3rem; color:#f0ead6;">
-                Количка
+            <h1 style="font-family:'Playfair Display',serif; font-size:2.8rem; color:#f0ead6;">
+                Вашата Количка
             </h1>
             <hr class="divider-gold" style="width:80px; margin:20px auto;">
         </div>
 
-        @if (TempData["Success"] != null)
+        @if (TempData["SuccessMessage"] != null)
         {
-            <div style="background:#1a2a1a; border:1px solid #3a6b3a; color:#6dbf67;
-                font-size:0.85rem; padding:12px 20px; margin-bottom:24px;">
-                ✓ @TempData["Success"]
+            <div class="alert alert-success alert-dismissible fade show text-center" role="alert" 
+                 style="background:rgba(40,167,69,0.2); border:1px solid #28a745; color:#85e89d;">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show text-center" role="alert"
+                 style="background:rgba(220,53,69,0.2); border:1px solid #dc3545; color:#ff8585;">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         }
 
         @if (!Model.Items.Any())
         {
-            <div class="text-center" style="padding:80px 0;">
-                <p style="color:#555; font-size:1rem; margin-bottom:32px;">Вашата количка е празна.</p>
-                <a asp-controller="Product" asp-action="Index" class="btn btn-gold" style="padding:13px 40px;">
+            <div class="text-center py-5" style="background:var(--dark2); border:1px solid #222; padding:60px 20px;">
+                <div style="font-size:3rem; color:var(--gold); margin-bottom:20px;">🛍️</div>
+                <h3 style="color:#eee; font-family:'Playfair Display',serif;">Количката ви е празна</h3>
+                <p style="color:#888; max-width:400px; margin:15px auto 30px;">
+                    Разгледайте нашата селекция от световно признати дизайнерски и нишови аромати.
+                </p>
+                <a asp-controller="Product" asp-action="Index" class="btn btn-gold">
                     Разгледай Колекцията
                 </a>
             </div>
@@ -36,120 +49,145 @@
         else
         {
             <div class="row g-5">
-                <!-- Cart items -->
+                <!-- Cart Items List -->
                 <div class="col-lg-8">
-                    @foreach (var item in Model.Items)
-                    {
-                        <div style="display:flex; gap:20px; align-items:center; padding:20px 0;
-                            border-bottom:1px solid #1e1e1e;">
-                            <img src="@item.ImageUrl" alt="@item.ProductName"
-                                 onerror="this.src='/images/images.jpg'"
-                                 style="width:80px; height:100px; object-fit:cover; border:1px solid #2a2a2a; flex-shrink:0;">
-                            <div style="flex:1;">
-                                <div style="color:#C9A84C; font-size:0.7rem; letter-spacing:2px;
-                                    text-transform:uppercase; margin-bottom:4px;">@item.Brand</div>
-                                <div style="font-family:'Playfair Display',serif; color:#f0ead6; font-size:1.05rem; margin-bottom:4px;">
-                                    @item.ProductName
+                    <div style="background:var(--dark2); border:1px solid #262626; padding:24px;">
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="d-flex align-items-center justify-content-between py-3 border-bottom border-secondary border-opacity-25 flex-wrap gap-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="@item.ImageUrl" alt="@item.Name" 
+                                         style="width:80px; height:80px; object-fit:cover; border:1px solid #333;"
+                                         onerror="this.src='/images/images.jpg'">
+                                    <div>
+                                        <div style="color:var(--gold); font-size:0.75rem; letter-spacing:2px; text-transform:uppercase;">
+                                            @item.Brand
+                                        </div>
+                                        <h5 style="color:#eee; font-family:'Playfair Display',serif; margin:3px 0 5px; font-size:1.1rem;">
+                                            @item.Name
+                                        </h5>
+                                        <div style="color:#888; font-size:0.8rem;">
+                                            @item.Concentration · @item.Size
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style="color:#666; font-size:0.78rem; letter-spacing:1px;">
-                                    @item.Concentration · @item.Ml ml
-                                </div>
-                                <div style="color:#C9A84C; font-size:0.9rem; margin-top:8px;">
-                                    @item.UnitPrice.ToString("F2") лв. / бр.
-                                </div>
-                            </div>
-                            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:12px;">
-                                <!-- Quantity form -->
-                                <form asp-controller="Cart" asp-action="UpdateQuantity" method="post"
-                                      style="display:flex; border:1px solid #2a2a2a;">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="productSizeId" value="@item.ProductSizeId" />
-                                    <button type="button" onclick="stepQty(this, -1)"
-                                            style="background:none; border:none; color:#aaa; padding:6px 12px; cursor:pointer;">−</button>
-                                    <input type="number" name="quantity" value="@item.Quantity" min="1" max="99"
-                                           style="width:44px; background:#1a1a1a; border:none; color:#f0ead6; text-align:center; font-size:0.85rem;"
-                                           onchange="this.form.submit()" />
-                                    <button type="button" onclick="stepQty(this, 1)"
-                                            style="background:none; border:none; color:#aaa; padding:6px 12px; cursor:pointer;">+</button>
-                                </form>
-                                <!-- Line total -->
-                                <span style="font-family:'Playfair Display',serif; color:#C9A84C; font-size:1.05rem;">
-                                    @item.LineTotal.ToString("F2") лв.
-                                </span>
-                                <!-- Remove -->
-                                <form asp-controller="Cart" asp-action="Remove" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="productSizeId" value="@item.ProductSizeId" />
-                                    <button type="submit" style="background:none; border:none; color:#444;
-                                        font-size:0.72rem; letter-spacing:1px; text-transform:uppercase; cursor:pointer;
-                                        padding:0; transition:color 0.2s;"
-                                        onmouseover="this.style.color='#bf6767'"
-                                        onmouseout="this.style.color='#444'">
-                                        × Премахни
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    }
 
-                    <div class="mt-4 d-flex justify-content-between">
-                        <a asp-controller="Product" asp-action="Index"
-                           style="color:#666; font-size:0.78rem; letter-spacing:1px; text-decoration:none; text-transform:uppercase;">
-                            ← Продължи пазаруването
-                        </a>
-                        <form asp-controller="Cart" asp-action="Clear" method="post">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" style="background:none; border:none; color:#444;
-                                font-size:0.72rem; letter-spacing:1px; text-transform:uppercase; cursor:pointer;">
-                                Изчисти количката
-                            </button>
-                        </form>
+                                <div class="d-flex align-items-center gap-4">
+                                    <div class="d-flex align-items-center" style="border:1px solid #333; background:var(--dark);">
+                                        <form asp-action="UpdateQuantity" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.ProductId" />
+                                            <input type="hidden" name="quantity" value="@(item.Quantity - 1)" />
+                                            <button type="submit" class="btn btn-sm text-light px-2" style="background:none; border:none;">−</button>
+                                        </form>
+                                        <span class="px-2" style="color:var(--gold); font-weight:600; min-width:30px; text-align:center;">
+                                            @item.Quantity
+                                        </span>
+                                        <form asp-action="UpdateQuantity" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.ProductId" />
+                                            <input type="hidden" name="quantity" value="@(item.Quantity + 1)" />
+                                            <button type="submit" class="btn btn-sm text-light px-2" style="background:none; border:none;">+</button>
+                                        </form>
+                                    </div>
+
+                                    <div style="min-width:100px; text-align:right;">
+                                        <span style="color:#fff; font-family:'Playfair Display',serif; font-size:1.15rem;">
+                                            @item.Subtotal.ToString("F2") лв.
+                                        </span>
+                                    </div>
+
+                                    <form asp-action="Remove" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.ProductId" />
+                                        <button type="submit" class="btn btn-sm text-danger" title="Премахни" style="background:none; border:none;">
+                                            ✕
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a asp-controller="Product" asp-action="Index" class="btn btn-outline-gold btn-sm">
+                                ← Продължи пазаруването
+                            </a>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Order summary -->
+                <!-- Order Summary & Coupon -->
                 <div class="col-lg-4">
-                    <div style="background:#141414; border:1px solid #2a2a2a; padding:32px;">
-                        <h4 style="font-family:'Playfair Display',serif; color:#f0ead6; margin-bottom:24px;">
-                            Обобщение
+                    <div style="background:var(--dark2); border:1px solid #262626; padding:30px;">
+                        <h4 style="font-family:'Playfair Display',serif; color:#f0ead6; margin-bottom:20px;">
+                            Обобщение на поръчката
                         </h4>
 
-                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;
-                            color:#888; font-size:0.85rem;">
-                            <span>Артикули (@Model.TotalItems)</span>
-                            <span>@Model.Total.ToString("F2") лв.</span>
+                        <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25" style="color:#aaa; font-size:0.9rem;">
+                            <span>Междинна сума</span>
+                            <span style="color:#eee;">@Model.Subtotal.ToString("F2") лв.</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;
-                            color:#888; font-size:0.85rem;">
+
+                        <!-- Coupon Form -->
+                        <div class="py-3 border-bottom border-secondary border-opacity-25">
+                            @if (!string.IsNullOrEmpty(Model.AppliedCouponCode))
+                            {
+                                <div class="d-flex justify-content-between align-items-center bg-dark p-2 border border-warning" style="font-size:0.85rem;">
+                                    <div>
+                                        <span class="badge bg-warning text-dark me-1">@Model.AppliedCouponCode</span>
+                                        <span style="color:#85e89d;">-@Model.DiscountPercentage.ToString("F0")% отстъпка</span>
+                                    </div>
+                                    <form asp-action="RemoveCoupon" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm text-secondary p-0" title="Премахни код">✕</button>
+                                    </form>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2" style="color:#85e89d; font-size:0.9rem;">
+                                    <span>Отстъпка (10%)</span>
+                                    <span>-@Model.DiscountAmount.ToString("F2") лв.</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <label style="font-size:0.75rem; letter-spacing:1px; color:#aaa; text-transform:uppercase; margin-bottom:8px; display:block;">
+                                    Код за отстъпка
+                                </label>
+                                <form asp-action="ApplyCoupon" method="post" class="d-flex gap-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="text" name="code" class="form-control form-control-sm" 
+                                           placeholder="напр. GERCHEV10" style="background:var(--dark); border-color:#444; color:#fff;" />
+                                    <button type="submit" class="btn btn-outline-gold btn-sm" style="white-space:nowrap;">
+                                        Приложи
+                                    </button>
+                                </form>
+                                <small style="color:#888; font-size:0.75rem; display:block; margin-top:6px;">
+                                    Имате код GERCHEV10? Въведете го тук за 10% отстъпка.
+                                </small>
+                            }
+                        </div>
+
+                        <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25" style="color:#aaa; font-size:0.9rem;">
                             <span>Доставка</span>
-                            <span style="color:#6dbf67;">Безплатна</span>
+                            <span style="color:#85e89d;">@(Model.Subtotal >= 150 ? "Безплатна" : "6.00 лв.")</span>
                         </div>
-                        <hr style="border-color:#2a2a2a; margin:20px 0;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:28px;">
-                            <span style="font-family:'Playfair Display',serif; color:#f0ead6; font-size:1.1rem;">Общо</span>
-                            <span style="font-family:'Playfair Display',serif; color:#C9A84C; font-size:1.3rem;">
-                                @Model.Total.ToString("F2") лв.
+
+                        <div class="d-flex justify-content-between py-3 my-2" style="font-size:1.3rem;">
+                            <span style="color:#f0ead6; font-family:'Playfair Display',serif;">Общо</span>
+                            <span style="color:var(--gold); font-family:'Playfair Display',serif; font-weight:700;">
+                                @((Model.Total + (Model.Subtotal >= 150 ? 0 : 6)).ToString("F2")) лв.
                             </span>
                         </div>
-                        <a asp-controller="Cart" asp-action="Checkout"
-                           class="btn btn-gold w-100" style="padding:14px; text-align:center; display:block;">
-                            Към плащане
+
+                        <a asp-controller="Checkout" asp-action="Index" class="btn btn-gold w-100 py-3 mt-3" style="letter-spacing:2px;">
+                            Продължи към плащане →
                         </a>
+
+                        <div class="text-center mt-3" style="color:#777; font-size:0.75rem;">
+                            🔒 Защитено 256-битово криптирано плащане
+                        </div>
                     </div>
                 </div>
             </div>
         }
     </div>
 </section>
-
-@section Scripts {
-<script>
-    function stepQty(btn, delta) {
-        var form = btn.closest('form');
-        var input = form.querySelector('input[type="number"]');
-        var val = Math.max(1, Math.min(99, parseInt(input.value, 10) + delta));
-        input.value = val;
-        form.submit();
-    }
-</script>
-}

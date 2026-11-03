@@ -1,33 +1,77 @@
-﻿@model IEnumerable<MVC.Intro.Models.Product>
+@model IEnumerable<MVC.Intro.Models.Product>
 @{
     ViewData["Title"] = "Колекция Парфюми";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentCat = ViewBag.CurrentCategory as string;
+    var searchTerm = ViewBag.SearchTerm as string;
+    var currentFilter = ViewBag.CurrentFilter as string;
 }
 
-<section style="padding: 80px 0 100px;">
+<section style="padding: 60px 0 100px;">
     <div class="container">
+        <!-- Heading -->
         <div class="text-center mb-5">
-            <p style="color:#C9A84C; letter-spacing:5px; text-transform:uppercase; font-size:0.72rem;">
-                — GerchevFragrance —
+            <p style="color:var(--gold); letter-spacing:4px; text-transform:uppercase; font-size:0.75rem;">
+                — Селекция на Gerchev Fragrance —
             </p>
-            <h1 style="font-family:'Playfair Display',serif; font-size:3rem; color:#f0ead6;">
+            <h1 style="font-family:var(--font-serif); font-size:clamp(2.4rem, 4vw, 3.2rem); color:#f0ead6;">
                 Нашата Колекция
             </h1>
             <hr class="divider-gold" style="width:80px; margin:20px auto;">
+            
+            @if (!string.IsNullOrEmpty(searchTerm))
+            {
+                <p style="color:#aaa; font-size:0.95rem;">
+                    Резултати от търсенето за: <strong style="color:var(--gold);">"@searchTerm"</strong>
+                    <a asp-action="Index" class="btn btn-sm btn-link text-secondary text-decoration-none ms-2">✕ Изчисти</a>
+                </p>
+            }
         </div>
 
-        @if (TempData["Success"] != null)
-        {
-            <div style="background:#1a2a1a; border:1px solid #3a6b3a; color:#6dbf67;
-                font-size:0.85rem; border-radius:0; padding:12px 20px; margin-bottom:28px;">
-                ✓ @TempData["Success"]
-            </div>
-        }
+        <!-- Filter & Category Pills -->
+        <div class="d-flex justify-content-center flex-wrap gap-2 mb-5">
+            <a asp-action="Index" 
+               class="btn btn-sm @(string.IsNullOrEmpty(currentCat) && string.IsNullOrEmpty(currentFilter) ? "btn-gold" : "btn-outline-gold")"
+               style="font-size:0.75rem;">
+                Всички
+            </a>
+            <a asp-action="Index" asp-route-category="Men" 
+               class="btn btn-sm @(currentCat == "Men" ? "btn-gold" : "btn-outline-gold")"
+               style="font-size:0.75rem;">
+                Мъжки
+            </a>
+            <a asp-action="Index" asp-route-category="Women" 
+               class="btn btn-sm @(currentCat == "Women" ? "btn-gold" : "btn-outline-gold")"
+               style="font-size:0.75rem;">
+                Дамски
+            </a>
+            <a asp-action="Index" asp-route-category="Unisex" 
+               class="btn btn-sm @(currentCat == "Unisex" ? "btn-gold" : "btn-outline-gold")"
+               style="font-size:0.75rem;">
+                Унисекс
+            </a>
+            <a asp-action="Index" asp-route-category="Luxury Fragrances" 
+               class="btn btn-sm @(currentCat == "Luxury Fragrances" ? "btn-gold" : "btn-outline-gold")"
+               style="font-size:0.75rem;">
+                Луксозни & Нишови
+            </a>
+            <a asp-action="Index" asp-route-filter="bestsellers" 
+               class="btn btn-sm @(currentFilter == "bestsellers" ? "btn-gold" : "btn-outline-gold")"
+               style="font-size:0.75rem;">
+                ✦ Бестселъри
+            </a>
+            <a asp-action="Index" asp-route-filter="offers" 
+               class="btn btn-sm @(currentFilter == "offers" ? "btn-gold" : "btn-outline-gold")"
+               style="font-size:0.75rem;">
+                Промоции
+            </a>
+        </div>
 
         @if (!Model.Any())
         {
-            <div class="text-center" style="color:#666; padding:60px 0;">
-                <p>Все още няма добавени парфюми.</p>
+            <div class="text-center py-5" style="background:var(--dark-card); border:1px solid #222; padding:60px 20px;">
+                <p style="color:#aaa; font-size:1.1rem; margin-bottom:20px;">Няма намерени парфюми по зададените критерии.</p>
+                <a asp-action="Index" class="btn btn-gold">Виж всички парфюми</a>
             </div>
         }
         else
@@ -35,68 +79,56 @@
             <div class="row g-4">
                 @foreach (var product in Model)
                 {
-                    var lowestPrice = product.Sizes
-                                          .Where(s => s.IsAvailable && s.Price > 0)
-                                          .OrderBy(s => s.Price)
-                                          .FirstOrDefault()?.Price
-                                      ?? product.Price;
-
-                    var availableMls = product.Sizes
-                                           .Where(s => s.IsAvailable && s.Price > 0)
-                                           .OrderBy(s => s.Ml)
-                                           .Select(s => $"{s.Ml} ml")
-                                           .ToList();
-
-                    bool hasAvailableSizes = availableMls.Any();
-
                     <div class="col-lg-4 col-md-6">
-                        <div class="product-card h-100">
-                            <div style="overflow:hidden; position:relative;">
-                                <img src="@product.ImageUrl" alt="@product.Brand @product.Name"
-                                     onerror="this.src='/images/images.jpg'">
-                                @if (!string.IsNullOrEmpty(product.FragranceFamily))
+                        <div class="product-card">
+                            <div class="product-image-wrap">
+                                @if (product.IsBestseller)
                                 {
-                                    <span style="position:absolute; top:12px; left:12px;
-                                        background:rgba(13,13,13,0.85); border:1px solid #2a2a2a;
-                                        color:#888; font-size:0.62rem; letter-spacing:2px;
-                                        text-transform:uppercase; padding:3px 10px;">
-                                        @product.FragranceFamily
-                                    </span>
+                                    <span class="badge-bestseller">✦ БЕСТСЕЛЪР</span>
                                 }
-                            </div>
-                            <div class="product-card-body d-flex flex-column" style="height:calc(100% - 280px);">
-                                <div class="product-brand">@product.Brand</div>
-                                <div class="product-name">@product.Name</div>
-                                <div class="product-meta d-flex flex-wrap gap-1 align-items-center mb-1">
-                                    <span class="badge-concentration me-1">@product.Concentration</span>
-                                    @if (hasAvailableSizes)
-                                    {
-                                        @foreach (var ml in availableMls)
-                                        {
-                                            <span style="font-size:0.7rem; color:#666; background:#1a1a1a;
-                                                border:1px solid #242424; padding:1px 7px;">@ml</span>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <span style="font-size:0.7rem; color:#555; padding:1px 4px;">
-                                            @product.Size
-                                        </span>
-                                    }
+                                @if (product.HasDiscount)
+                                {
+                                    <span class="badge-discount">-@product.DiscountPercentage%</span>
+                                }
+                                <img src="@product.ImageUrl" alt="@product.Name" onerror="this.src='/images/images.jpg'">
+
+                                <div class="card-actions-hover">
+                                    <a asp-action="Details" asp-route-id="@product.Id" 
+                                       class="btn btn-outline-gold btn-sm flex-grow-1" style="font-size:0.7rem; padding:8px 12px;">
+                                        Преглед
+                                    </a>
+                                    <button type="button" class="btn btn-gold btn-sm" onclick="addToCart('@product.Id')" 
+                                            title="Добави в количката" style="padding:8px 14px;">
+                                        <i class="bi bi-bag-plus"></i>
+                                    </button>
                                 </div>
+                            </div>
+
+                            <div class="product-body">
+                                <div class="product-brand">@product.Brand</div>
+                                <h3 class="product-title">
+                                    <a asp-action="Details" asp-route-id="@product.Id" style="color:inherit; text-decoration:none;">
+                                        @product.Name
+                                    </a>
+                                </h3>
+                                <div class="product-meta">
+                                    <span class="badge-concentration me-1">@product.Concentration</span>
+                                    <span>@product.Size</span>
+                                </div>
+
                                 @if (!string.IsNullOrEmpty(product.Description))
                                 {
-                                    <p style="color:#777; font-size:0.83rem; line-height:1.6; margin-top:6px; flex-grow:1;">
-                                        @(product.Description.Length > 90 ? product.Description[..90] + "…" : product.Description)
+                                    <p style="color:#888; font-size:0.83rem; line-height:1.6; margin-bottom:15px; flex-grow:1;">
+                                        @(product.Description.Length > 95 ? product.Description[..95] + "…" : product.Description)
                                     </p>
                                 }
-                                <div class="d-flex justify-content-between align-items-center mt-auto pt-3"
-                                     style="border-top:1px solid #2a2a2a;">
-                                    <span class="product-price">
-                                        @(hasAvailableSizes ? "от " : "")@lowestPrice.ToString("F2") лв.
-                                    </span>
-                                    <a asp-action="Details" asp-route-id="@product.Id"
-                                       class="btn btn-outline-gold btn-sm">Детайли</a>
+
+                                <div class="product-price-row">
+                                    <span class="current-price">@product.Price.ToString("F2") лв.</span>
+                                    @if (product.HasDiscount)
+                                    {
+                                        <span class="original-price">@product.OriginalPrice!.Value.ToString("F2") лв.</span>
+                                    }
                                 </div>
                             </div>
                         </div>

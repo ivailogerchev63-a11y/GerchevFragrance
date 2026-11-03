@@ -12,11 +12,21 @@ namespace MVC.Intro
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // ── MVC ──────────────────────────────────────────────────────────────
             builder.Services.AddControllersWithViews();
             builder.Services.AddRazorPages();
 
-            // ── Database ─────────────────────────────────────────────────────────
+            // Session & HTTP Context
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromHours(2);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<CartService>();
+
+            // Database — absolute path relative to project root
             var dbFolder = Path.Combine(builder.Environment.ContentRootPath, "Database");
             Directory.CreateDirectory(dbFolder);
             var dbPath = Path.Combine(dbFolder, "fragrance.db");
@@ -24,32 +34,17 @@ namespace MVC.Intro
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite($"Data Source={dbPath}"));
 
-            // ── Identity ─────────────────────────────────────────────────────────
+            // Identity
             builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
             {
                 options.SignIn.RequireConfirmedAccount = false;
-                options.Password.RequireDigit           = true;
-                options.Password.RequiredLength         = 6;
+                options.Password.RequireDigit = true;
+                options.Password.RequiredLength = 6;
                 options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase       = false;
+                options.Password.RequireUppercase = false;
             })
             .AddEntityFrameworkStores<AppDbContext>();
 
-            // ── Session (for shopping cart) ───────────────────────────────────────
-            builder.Services.AddDistributedMemoryCache();
-            builder.Services.AddSession(options =>
-            {
-                options.IdleTimeout = TimeSpan.FromMinutes(60);
-                options.Cookie.HttpOnly = true;
-                options.Cookie.IsEssential = true;
-            });
-
-            // ── Application services ─────────────────────────────────────────────
-            builder.Services.AddHttpContextAccessor();
-            builder.Services.AddScoped<ProductService>();
-            builder.Services.AddScoped<CartService>();
-
-            // ── Build ────────────────────────────────────────────────────────────
             var app = builder.Build();
 
             if (!app.Environment.IsDevelopment())
@@ -61,11 +56,13 @@ namespace MVC.Intro
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
-            app.UseSession();           // must be before Authentication
+
+            app.UseSession();
+
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // ── Seed database ─────────────────────────────────────────────────────
+            // Seed database
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -73,7 +70,6 @@ namespace MVC.Intro
                 SeedData.Initialize(db);
             }
 
-            // ── Routes ────────────────────────────────────────────────────────────
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");

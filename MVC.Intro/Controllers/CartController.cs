@@ -5,56 +5,122 @@ namespace MVC.Intro.Controllers
 {
     public class CartController : Controller
     {
-        private readonly CartService _cart;
+        private readonly CartService _cartService;
 
-        public CartController(CartService cart)
+        public CartController(CartService cartService)
         {
-            _cart = cart;
+            _cartService = cartService;
         }
 
-        // GET /Cart
         public IActionResult Index()
         {
-            return View(_cart.GetCart());
-        }
-
-        // POST /Cart/UpdateQuantity
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult UpdateQuantity(Guid productSizeId, int quantity)
-        {
-            _cart.UpdateQuantity(productSizeId, quantity);
-            return RedirectToAction(nameof(Index));
-        }
-
-        // POST /Cart/Remove
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Remove(Guid productSizeId)
-        {
-            _cart.RemoveItem(productSizeId);
-            TempData["Success"] = "Артикулът е премахнат от количката.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        // POST /Cart/Clear
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Clear()
-        {
-            _cart.Clear();
-            TempData["Success"] = "Количката е изчистена.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        // GET /Cart/Checkout
-        public IActionResult Checkout()
-        {
-            var cart = _cart.GetCart();
-            if (!cart.Items.Any())
-                return RedirectToAction(nameof(Index));
-
+            var cart = _cartService.GetCartViewModel();
             return View(cart);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Add(Guid id, int quantity = 1)
+        {
+            var success = await _cartService.AddToCartAsync(id, quantity);
+            var cart = _cartService.GetCartViewModel();
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest" || Request.Headers.Accept.ToString().Contains("application/json"))
+            {
+                return Json(new
+                {
+                    success,
+                    totalItems = cart.TotalItems,
+                    subtotal = cart.Subtotal.ToString("F2"),
+                    total = cart.Total.ToString("F2"),
+                    message = success ? "Продуктът беше добавен в количката!" : "Възникна грешка при добавянето."
+                });
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public IActionResult UpdateQuantity(Guid id, int quantity)
+        {
+            _cartService.UpdateQuantity(id, quantity);
+            var cart = _cartService.GetCartViewModel();
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new
+                {
+                    success = true,
+                    totalItems = cart.TotalItems,
+                    subtotal = cart.Subtotal.ToString("F2"),
+                    discount = cart.DiscountAmount.ToString("F2"),
+                    total = cart.Total.ToString("F2")
+                });
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public IActionResult Remove(Guid id)
+        {
+            _cartService.RemoveFromCart(id);
+            var cart = _cartService.GetCartViewModel();
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new
+                {
+                    success = true,
+                    totalItems = cart.TotalItems,
+                    subtotal = cart.Subtotal.ToString("F2"),
+                    total = cart.Total.ToString("F2")
+                });
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ApplyCoupon(string code, string? email)
+        {
+            var result = await _cartService.ApplyCouponAsync(code, email);
+            var cart = _cartService.GetCartViewModel();
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new
+                {
+                    success = result.success,
+                    message = result.message,
+                    discountPercent = result.discountPercent,
+                    discountAmount = cart.DiscountAmount.ToString("F2"),
+                    total = cart.Total.ToString("F2")
+                });
+            }
+
+            TempData[result.success ? "SuccessMessage" : "ErrorMessage"] = result.message;
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public IActionResult RemoveCoupon()
+        {
+            _cartService.RemoveCoupon();
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public IActionResult GetCartSummary()
+        {
+            var cart = _cartService.GetCartViewModel();
+            return Json(new
+            {
+                totalItems = cart.TotalItems,
+                subtotal = cart.Subtotal.ToString("F2"),
+                discount = cart.DiscountAmount.ToString("F2"),
+                total = cart.Total.ToString("F2"),
+                items = cart.Items
+            });
         }
     }
 }

@@ -1,0 +1,164 @@
+@model MVC.Intro.Models.CheckoutViewModel
+@{
+    ViewData["Title"] = "Завършване на поръчката";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section style="padding: 60px 0 100px;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <p style="color:var(--gold); letter-spacing:4px; text-transform:uppercase; font-size:0.75rem;">
+                — Сигурна поръчка —
+            </p>
+            <h1 style="font-family:'Playfair Display',serif; font-size:2.8rem; color:#f0ead6;">
+                Данни за Доставка
+            </h1>
+            <hr class="divider-gold" style="width:80px; margin:20px auto;">
+        </div>
+
+        <form asp-action="PlaceOrder" method="post">
+            @Html.AntiForgeryToken()
+            <div class="row g-5">
+                <!-- Shipping & Customer Details -->
+                <div class="col-lg-7">
+                    <div style="background:var(--dark2); border:1px solid #262626; padding:35px;" class="form-luxury">
+                        <h4 style="font-family:'Playfair Display',serif; color:#f0ead6; margin-bottom:24px;">
+                            Информация за клиента
+                        </h4>
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label>Име и Фамилия *</label>
+                            <input asp-for="CustomerName" class="form-control" placeholder="Иван Иванов" required />
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label>Имейл адрес *</label>
+                                <input asp-for="CustomerEmail" type="email" class="form-control" placeholder="ivan@example.com" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Телефонен номер *</label>
+                                <input asp-for="CustomerPhone" class="form-control" placeholder="088 123 4567" required />
+                            </div>
+                        </div>
+
+                        <h4 style="font-family:'Playfair Display',serif; color:#f0ead6; margin:30px 0 20px;">
+                            Адрес за доставка
+                        </h4>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label>Град *</label>
+                                <input asp-for="City" class="form-control" placeholder="София" required />
+                            </div>
+                            <div class="col-md-4">
+                                <label>Пощенски код</label>
+                                <input asp-for="PostalCode" class="form-control" placeholder="1000" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Точен адрес за доставка (или офис на куриер) *</label>
+                            <input asp-for="ShippingAddress" class="form-control" placeholder="ул. Примерна 12, вх. А, ет. 3" required />
+                        </div>
+
+                        <div class="mb-4">
+                            <label>Бележки към доставката (по избор)</label>
+                            <textarea asp-for="Notes" class="form-control" rows="2" placeholder="Напр. доставка след 14:00 часа"></textarea>
+                        </div>
+
+                        <h4 style="font-family:'Playfair Display',serif; color:#f0ead6; margin:30px 0 20px;">
+                            Начин на плащане
+                        </h4>
+
+                        <div class="p-3 mb-3" style="background:var(--dark3); border:1px solid var(--gold);">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="Наложен платеж" id="cod" checked>
+                                <label class="form-check-label text-white" for="cod">
+                                    <strong>Наложен платеж (в брой или с карта при доставка)</strong>
+                                    <div style="color:#aaa; font-size:0.75rem; text-transform:none; margin-top:4px;">
+                                        Плащате сигурно при получаване с опция за преглед на пратката.
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Review & Checkout Summary -->
+                <div class="col-lg-5">
+                    <div style="background:var(--dark2); border:1px solid #262626; padding:30px; position:sticky; top:100px;">
+                        <h4 style="font-family:'Playfair Display',serif; color:#f0ead6; margin-bottom:20px;">
+                            Вашата поръчка
+                        </h4>
+
+                        <div class="mb-3" style="max-height:260px; overflow-y:auto;">
+                            @foreach (var item in Model.Cart.Items)
+                            {
+                                <div class="d-flex align-items-center justify-content-between py-2 border-bottom border-secondary border-opacity-25">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img src="@item.ImageUrl" style="width:45px; height:45px; object-fit:cover;" onerror="this.src='/images/images.jpg'">
+                                        <div>
+                                            <div style="color:#eee; font-size:0.85rem; font-weight:600;">@item.Name</div>
+                                            <div style="color:#888; font-size:0.75rem;">@item.Brand · @item.Quantity бр.</div>
+                                        </div>
+                                    </div>
+                                    <div style="color:var(--gold); font-size:0.9rem;">
+                                        @item.Subtotal.ToString("F2") лв.
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Coupon Code in Checkout -->
+                        <div class="mb-3 pt-2">
+                            <label style="font-size:0.75rem; letter-spacing:1px; color:#aaa; text-transform:uppercase; margin-bottom:6px; display:block;">
+                                Код за отстъпка
+                            </label>
+                            <input asp-for="CouponCode" class="form-control form-control-sm text-uppercase" 
+                                   placeholder="GERCHEV10" style="background:var(--dark); border-color:#444; color:#fff;" />
+                            <small style="color:#888; font-size:0.75rem;">
+                                Ако имате код за отстъпка, въведете го тук. Ще бъде валидиран при финализиране.
+                            </small>
+                        </div>
+
+                        <div class="d-flex justify-content-between py-2 border-top border-secondary border-opacity-25" style="color:#aaa; font-size:0.9rem;">
+                            <span>Междинна сума:</span>
+                            <span style="color:#eee;">@Model.Cart.Subtotal.ToString("F2") лв.</span>
+                        </div>
+
+                        @if (Model.Cart.DiscountAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between py-2" style="color:#85e89d; font-size:0.9rem;">
+                                <span>Отстъпка (@Model.Cart.DiscountPercentage.ToString("F0")%):</span>
+                                <span>-@Model.Cart.DiscountAmount.ToString("F2") лв.</span>
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between py-2" style="color:#aaa; font-size:0.9rem;">
+                            <span>Доставка:</span>
+                            <span style="color:#85e89d;">@(Model.Cart.Subtotal >= 150 ? "Безплатна" : "6.00 лв.")</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between py-3 my-2 border-top border-secondary border-opacity-25" style="font-size:1.3rem;">
+                            <span style="color:#f0ead6; font-family:'Playfair Display',serif;">Крайна сума:</span>
+                            <span style="color:var(--gold); font-family:'Playfair Display',serif; font-weight:700;">
+                                @((Model.Cart.Total + (Model.Cart.Subtotal >= 150 ? 0 : 6)).ToString("F2")) лв.
+                            </span>
+                        </div>
+
+                        <button type="submit" class="btn btn-gold w-100 py-3 mt-3" style="letter-spacing:2px; font-size:0.85rem;">
+                            ПОТВЪРДИ ПОРЪЧКАТА
+                        </button>
+
+                        <div class="text-center mt-3" style="color:#777; font-size:0.75rem;">
+                            С натискането на бутона се съгласявате с Общите условия и Политиката за поверителност.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>

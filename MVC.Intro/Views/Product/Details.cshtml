@@ -1,281 +1,185 @@
-﻿@model MVC.Intro.Models.Product
+@model MVC.Intro.Models.Product
 @{
-    ViewData["Title"] = $"{Model.Brand} {Model.Name} — {Model.Concentration}";
+    ViewData["Title"] = Model.Name;
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var availableSizes = Model.Sizes.OrderBy(s => s.Ml).ToList();
-    var firstAvailable = availableSizes.FirstOrDefault(s => s.IsAvailable);
-
-    // Split comma-separated note strings into lists
-    static List<string> SplitNotes(string? notes) =>
-        string.IsNullOrWhiteSpace(notes)
-            ? new List<string>()
-            : notes.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
-
-    var topNotes    = SplitNotes(Model.TopNotes);
-    var heartNotes  = SplitNotes(Model.HeartNotes);
-    var baseNotes   = SplitNotes(Model.BaseNotes);
-    bool hasNotes   = topNotes.Any() || heartNotes.Any() || baseNotes.Any();
+    var related = ViewBag.RelatedProducts as List<MVC.Intro.Models.Product>;
 }
 
-<section style="padding: 80px 0 120px;">
+<section style="padding: 60px 0 120px;">
     <div class="container">
-        <a asp-action="Index" style="color:#C9A84C; text-decoration:none; font-size:0.78rem;
-            letter-spacing:2px; text-transform:uppercase;">
-            ← Назад към колекцията
-        </a>
-        <hr class="divider-gold" style="width:100%; margin:30px 0;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a asp-action="Index" style="color:var(--gold); text-decoration:none; font-size:0.78rem; letter-spacing:2px; text-transform:uppercase;">
+                ← Назад към колекцията
+            </a>
+            <span style="color:#777; font-size:0.75rem;">
+                Категория: <strong style="color:#aaa;">@(Model.Category ?? "Луксозни")</strong>
+            </span>
+        </div>
+        <hr class="divider-gold" style="width:100%; margin:15px 0 40px;">
 
-        @if (TempData["Success"] != null)
-        {
-            <div class="alert" style="background:#1a2a1a; border:1px solid #3a6b3a; color:#6dbf67;
-                font-size:0.85rem; border-radius:0; padding:12px 20px; margin-bottom:24px;">
-                ✓ @TempData["Success"]
-            </div>
-        }
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert" style="background:#2a1a1a; border:1px solid #6b3a3a; color:#e07070;
-                font-size:0.85rem; border-radius:0; padding:12px 20px; margin-bottom:24px;">
-                ✗ @TempData["Error"]
-            </div>
-        }
-
-        <div class="row g-5 align-items-start">
-            <!-- ── Image ─────────────────────────────────────────────────────── -->
-            <div class="col-lg-5">
-                <div style="border:1px solid #2a2a2a; overflow:hidden;">
-                    <img src="@Model.ImageUrl" alt="@Model.Brand @Model.Name"
-                         style="width:100%; display:block; max-height:560px; object-fit:cover;"
+        <div class="row g-5 align-items-center mb-5">
+            <!-- Product Image Showcase -->
+            <div class="col-lg-5 text-center">
+                <div style="border:1px solid var(--dark-border); background:radial-gradient(circle, #1a1a1a 0%, #0d0d0d 100%); padding:30px; position:relative;">
+                    @if (Model.IsBestseller)
+                    {
+                        <span class="badge-bestseller">✦ БЕСТСЕЛЪР</span>
+                    }
+                    @if (Model.HasDiscount)
+                    {
+                        <span class="badge-discount">-@Model.DiscountPercentage%</span>
+                    }
+                    <img src="@Model.ImageUrl" alt="@Model.Name"
+                         style="width:100%; max-height:480px; object-fit:contain; filter:drop-shadow(0 15px 25px rgba(0,0,0,0.8));"
                          onerror="this.src='/images/images.jpg'">
                 </div>
-
-                <!-- Fragrance family badge under image -->
-                @if (!string.IsNullOrEmpty(Model.FragranceFamily))
-                {
-                    <div style="margin-top:14px; text-align:center;">
-                        <span style="border:1px solid #2a2a2a; color:#777; font-size:0.72rem;
-                            letter-spacing:2px; text-transform:uppercase; padding:5px 14px;">
-                            @Model.FragranceFamily
-                        </span>
-                    </div>
-                }
             </div>
 
-            <!-- ── Details ───────────────────────────────────────────────────── -->
+            <!-- Product Details & Purchase Form -->
             <div class="col-lg-7">
-                <p style="color:#C9A84C; letter-spacing:4px; text-transform:uppercase; font-size:0.72rem; margin-bottom:8px;">
+                <p style="color:var(--gold); letter-spacing:4px; text-transform:uppercase; font-size:0.75rem; margin-bottom:8px; font-weight:600;">
                     @Model.Brand
                 </p>
-                <h1 style="font-family:'Playfair Display',serif; font-size:2.8rem; color:#f0ead6; margin-bottom:12px; line-height:1.15;">
+                <h1 style="font-family:var(--font-serif); font-size:clamp(2.2rem, 3.8vw, 3rem); color:#f0ead6; margin-bottom:16px;">
                     @Model.Name
                 </h1>
 
                 <div class="d-flex gap-3 mb-4 flex-wrap align-items-center">
-                    <span class="badge-concentration">@Model.Concentration</span>
+                    <span class="badge-concentration" style="border:1px solid var(--gold); color:var(--gold); font-size:0.75rem; padding:4px 12px;">
+                        @Model.Concentration
+                    </span>
+                    <span style="color:#888; font-size:0.85rem;">Размер: @Model.Size</span>
+                    @if (Model.StockQuantity > 0)
+                    {
+                        <span style="color:#6dbf67; font-size:0.85rem;">● В наличност (@Model.StockQuantity бр.)</span>
+                    }
+                    else
+                    {
+                        <span style="color:#bf6767; font-size:0.85rem;">● Изчерпан</span>
+                    }
                 </div>
 
-                <p style="color:#999; line-height:1.9; font-size:0.95rem; max-width:520px; margin-bottom:32px;">
+                <p style="color:#bbb; line-height:1.9; font-size:0.98rem; max-width:550px; margin-bottom:28px;">
                     @Model.Description
                 </p>
 
-                <!-- ── Fragrance pyramid ──────────────────────────────────────── -->
-                @if (hasNotes)
+                <!-- Olfactory Breakdown -->
+                @if (!string.IsNullOrEmpty(Model.Notes))
                 {
-                    <div style="margin-bottom:32px;">
-                        <p style="color:#aaa; font-size:0.72rem; letter-spacing:3px; text-transform:uppercase; margin-bottom:18px;">
-                            Ароматна пирамида
-                        </p>
-                        <div class="row g-3">
-                            @if (topNotes.Any())
-                            {
-                                <div class="col-12 col-sm-4">
-                                    <div style="border-left:2px solid #C9A84C; padding-left:12px;">
-                                        <div style="color:#C9A84C; font-size:0.65rem; letter-spacing:3px;
-                                            text-transform:uppercase; margin-bottom:8px;">Начални</div>
-                                        @foreach (var note in topNotes)
-                                        {
-                                            <div style="color:#ccc; font-size:0.82rem; margin-bottom:4px;">@note</div>
-                                        }
-                                    </div>
-                                </div>
-                            }
-                            @if (heartNotes.Any())
-                            {
-                                <div class="col-12 col-sm-4">
-                                    <div style="border-left:2px solid #a8873a; padding-left:12px;">
-                                        <div style="color:#a8873a; font-size:0.65rem; letter-spacing:3px;
-                                            text-transform:uppercase; margin-bottom:8px;">Сърдечни</div>
-                                        @foreach (var note in heartNotes)
-                                        {
-                                            <div style="color:#ccc; font-size:0.82rem; margin-bottom:4px;">@note</div>
-                                        }
-                                    </div>
-                                </div>
-                            }
-                            @if (baseNotes.Any())
-                            {
-                                <div class="col-12 col-sm-4">
-                                    <div style="border-left:2px solid #666; padding-left:12px;">
-                                        <div style="color:#888; font-size:0.65rem; letter-spacing:3px;
-                                            text-transform:uppercase; margin-bottom:8px;">Базови</div>
-                                        @foreach (var note in baseNotes)
-                                        {
-                                            <div style="color:#ccc; font-size:0.82rem; margin-bottom:4px;">@note</div>
-                                        }
-                                    </div>
-                                </div>
-                            }
+                    <div class="mb-4 p-3" style="background:var(--dark-card); border-left:2px solid var(--gold);">
+                        <div style="color:var(--gold); font-size:0.72rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; font-weight:600;">
+                            Олфактивна Композиция:
+                        </div>
+                        <div style="color:#ccc; font-size:0.85rem; line-height:1.7;">
+                            @Model.Notes
                         </div>
                     </div>
                 }
 
-                <hr class="divider-gold" style="margin:28px 0;">
-
-                <!-- ── Size selector ─────────────────────────────────────────── -->
-                @if (availableSizes.Any())
-                {
-                    <form asp-controller="Product" asp-action="AddToCart" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="productId" value="@Model.Id" />
-
-                        <p style="color:#aaa; font-size:0.78rem; letter-spacing:2px;
-                            text-transform:uppercase; margin-bottom:14px;">
-                            Изберете размер
-                        </p>
-
-                        <div class="d-flex flex-wrap gap-3 mb-4" id="sizeOptions">
-                            @foreach (var size in availableSizes)
-                            {
-                                if (size.IsAvailable)
-                                {
-                                    bool isFirst = size.Id == firstAvailable?.Id;
-                                    <label class="size-option @(isFirst ? "selected" : "")"
-                                           data-price="@size.Price.ToString("F2")"
-                                           data-size-id="@size.Id"
-                                           style="cursor:pointer;
-                                               border:1px solid @(isFirst ? "#C9A84C" : "#333");
-                                               padding:10px 20px; font-size:0.82rem; letter-spacing:1px;
-                                               color:@(isFirst ? "#C9A84C" : "#777");
-                                               transition:all 0.2s; user-select:none;">
-                                        <input type="radio" name="productSizeId" value="@size.Id"
-                                               style="display:none;"
-                                               @(isFirst ? "checked" : "") />
-                                        @size.Ml ml
-                                    </label>
-                                }
-                                else
-                                {
-                                    <span title="@size.UnavailableReason"
-                                          style="border:1px solid #1e1e1e; padding:10px 20px;
-                                              font-size:0.82rem; letter-spacing:1px;
-                                              color:#383838; cursor:not-allowed; position:relative;">
-                                        @size.Ml ml
-                                        <small style="display:block; font-size:0.62rem; color:#383838; letter-spacing:0;">недостъпен</small>
-                                    </span>
-                                }
-                            }
-                        </div>
-
-                        @if (firstAvailable != null)
-                        {
-                            <!-- Dynamic price display -->
-                            <div style="margin-bottom:28px;">
-                                <span id="displayPrice" style="font-family:'Playfair Display',serif;
-                                    font-size:2.5rem; color:#C9A84C;">
-                                    @firstAvailable.Price.ToString("F2") лв.
-                                </span>
-                            </div>
-
-                            <!-- Stock -->
-                            <div style="margin-bottom:28px; font-size:0.78rem; letter-spacing:1px;">
-                                @if (Model.StockQuantity > 0)
-                                {
-                                    <span style="color:#6dbf67;">● В наличност</span>
-                                }
-                                else
-                                {
-                                    <span style="color:#bf6767;">● Изчерпан</span>
-                                }
-                            </div>
-
-                            @if (Model.StockQuantity > 0)
-                            {
-                                <div class="d-flex gap-3 align-items-center flex-wrap">
-                                    <div style="display:flex; border:1px solid #333;">
-                                        <button type="button" onclick="changeQty(-1)"
-                                                style="background:none; border:none; color:#aaa; padding:8px 14px; font-size:1.1rem; cursor:pointer;">−</button>
-                                        <input type="number" name="quantity" id="qtyInput" value="1" min="1" max="99"
-                                               style="width:48px; background:#1a1a1a; border:none; color:#f0ead6;
-                                                   text-align:center; font-size:0.9rem;" />
-                                        <button type="button" onclick="changeQty(1)"
-                                                style="background:none; border:none; color:#aaa; padding:8px 14px; font-size:1.1rem; cursor:pointer;">+</button>
-                                    </div>
-                                    <button type="submit" class="btn btn-gold" style="padding:12px 36px;">
-                                        Добави в количката
-                                    </button>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <!-- All sizes unavailable -->
-                            <div style="margin-bottom:28px;">
-                                <span style="font-family:'Playfair Display',serif; font-size:2.5rem; color:#C9A84C;">
-                                    @Model.Price.ToString("F2") лв.
-                                </span>
-                            </div>
-                            <p style="color:#555; font-size:0.83rem; letter-spacing:0.5px;">
-                                Стандартните размери за този парфюм се различават от 50/100/150 ml.
-                                Свържете се с нас за наличност.
-                            </p>
-                        }
-                    </form>
-                }
-                else
-                {
-                    <div style="margin-bottom:32px;">
-                        <span style="font-family:'Playfair Display',serif; font-size:2.5rem; color:#C9A84C;">
-                            @Model.Price.ToString("F2") лв.
+                <!-- Pricing -->
+                <div class="d-flex align-items-baseline gap-3 mb-4">
+                    <span style="font-family:var(--font-serif); font-size:2.5rem; color:var(--gold); font-weight:700;">
+                        @Model.Price.ToString("F2") лв.
+                    </span>
+                    @if (Model.HasDiscount)
+                    {
+                        <span style="color:#777; text-decoration:line-through; font-size:1.2rem;">
+                            @Model.OriginalPrice!.Value.ToString("F2") лв.
                         </span>
+                        <span class="badge bg-danger">Спестявате @Model.SavingsAmount.ToString("F2") лв.</span>
+                    }
+                </div>
+
+                <!-- Add to Cart Form -->
+                <div class="d-flex gap-3 align-items-center flex-wrap mb-4">
+                    <div class="d-flex align-items-center" style="border:1px solid #444; background:var(--dark-card);">
+                        <button type="button" class="btn text-white px-3" onclick="decrementQty()">−</button>
+                        <input type="number" id="detailQty" value="1" min="1" max="@Model.StockQuantity" 
+                               style="width:50px; text-align:center; background:none; border:none; color:var(--gold); font-weight:700;" readonly>
+                        <button type="button" class="btn text-white px-3" onclick="incrementQty()">+</button>
                     </div>
-                    <p style="color:#555; font-size:0.85rem;">Няма налични размери за поръчка в момента.</p>
-                }
+
+                    <button type="button" class="btn btn-gold py-3 px-4" onclick="addCurrentProduct()" style="letter-spacing:2px;">
+                        <i class="bi bi-bag-plus"></i> Добави в Количката
+                    </button>
+                </div>
+
+                <div class="p-3" style="background:#0f0f0f; border:1px solid #222; font-size:0.8rem; color:#888;">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-shield-check text-warning"></i> 100% Оригинален продукт с гарантиран произход
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-truck text-warning"></i> Бърза куриерска доставка с опция за преглед
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- Related Products Section -->
+        @if (related != null && related.Any())
+        {
+            <div class="mt-5 pt-5 border-top border-secondary border-opacity-25">
+                <div class="text-center mb-5">
+                    <p style="color:var(--gold); letter-spacing:4px; text-transform:uppercase; font-size:0.75rem;">
+                        — Може да харесате още —
+                    </p>
+                    <h3 style="font-family:var(--font-serif); color:#f0ead6; font-size:2rem;">
+                        Свързани Аромати
+                    </h3>
+                </div>
+
+                <div class="row g-4 justify-content-center">
+                    @foreach (var p in related)
+                    {
+                        <div class="col-md-4">
+                            <div class="product-card">
+                                <div class="product-image-wrap">
+                                    <img src="@p.ImageUrl" alt="@p.Name" onerror="this.src='/images/images.jpg'">
+                                    <div class="card-actions-hover">
+                                        <a asp-action="Details" asp-route-id="@p.Id" class="btn btn-outline-gold btn-sm flex-grow-1">
+                                            Преглед
+                                        </a>
+                                        <button type="button" class="btn btn-gold btn-sm" onclick="addToCart('@p.Id')">
+                                            <i class="bi bi-bag-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="product-body">
+                                    <div class="product-brand">@p.Brand</div>
+                                    <h4 class="product-title" style="font-size:1.05rem;">
+                                        <a asp-action="Details" asp-route-id="@p.Id" style="color:inherit; text-decoration:none;">
+                                            @p.Name
+                                        </a>
+                                    </h4>
+                                    <div class="product-meta">
+                                        <span>@p.Concentration · @p.Size</span>
+                                    </div>
+                                    <div class="product-price-row">
+                                        <span class="current-price">@p.Price.ToString("F2") лв.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
     </div>
 </section>
 
 @section Scripts {
-<script>
-    // ── Size selector ──────────────────────────────────────────────────────────
-    document.querySelectorAll('.size-option').forEach(function (label) {
-        label.addEventListener('click', function () {
-            document.querySelectorAll('.size-option').forEach(function (l) {
-                l.style.borderColor = '#333';
-                l.style.color = '#777';
-                l.classList.remove('selected');
-            });
-            this.style.borderColor = '#C9A84C';
-            this.style.color = '#C9A84C';
-            this.classList.add('selected');
-
-            var radio = this.querySelector('input[type="radio"]');
-            if (radio) radio.checked = true;
-
-            var price = this.getAttribute('data-price');
-            var priceEl = document.getElementById('displayPrice');
-            if (priceEl && price) {
-                priceEl.textContent = price.replace('.', ',') + ' лв.';
-            }
-        });
-    });
-
-    // ── Quantity stepper ───────────────────────────────────────────────────────
-    function changeQty(delta) {
-        var input = document.getElementById('qtyInput');
-        var val = parseInt(input.value, 10) || 1;
-        val = Math.max(1, Math.min(99, val + delta));
-        input.value = val;
-    }
-</script>
+    <script>
+        function incrementQty() {
+            var val = parseInt($('#detailQty').val()) || 1;
+            $('#detailQty').val(val + 1);
+        }
+        function decrementQty() {
+            var val = parseInt($('#detailQty').val()) || 1;
+            if (val > 1) $('#detailQty').val(val - 1);
+        }
+        function addCurrentProduct() {
+            var qty = parseInt($('#detailQty').val()) || 1;
+            addToCart('@Model.Id', qty);
+        }
+    </script>
 }
