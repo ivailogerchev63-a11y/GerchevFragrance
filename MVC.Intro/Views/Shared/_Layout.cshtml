@@ -201,6 +201,26 @@
                     </li>
                 </ul>
                 <div class="d-flex align-items-center gap-2">
+                    @{
+                        // Show cart icon with item count from session
+                        var cartJson = Context.Session.GetString("ShoppingCart");
+                        int cartCount = 0;
+                        if (!string.IsNullOrEmpty(cartJson))
+                        {
+                            try
+                            {
+                                var cartItems = System.Text.Json.JsonSerializer.Deserialize<List<MVC.Intro.Models.CartItem>>(cartJson);
+                                cartCount = cartItems?.Sum(i => i.Quantity) ?? 0;
+                            }
+                            catch { }
+                        }
+                    }
+                    <a asp-controller="Cart" asp-action="Index"
+                       style="color:#ccc; text-decoration:none; font-size:0.78rem; letter-spacing:1.5px;
+                           text-transform:uppercase; margin: 0 10px; transition:color 0.3s; position:relative;"
+                       onmouseover="this.style.color='#C9A84C'" onmouseout="this.style.color='#ccc'">
+                        Количка@(cartCount > 0 ? $" ({cartCount})" : "")
+                    </a>
                     @if (User.Identity != null && User.Identity.IsAuthenticated)
                     {
                         <span style="color:#888; font-size:0.78rem; letter-spacing:1px;">@User.Identity.Name</span>

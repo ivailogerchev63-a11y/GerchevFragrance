@@ -22,7 +22,6 @@
                 <div asp-validation-summary="ModelOnly" style="color:#e07070; font-size:0.85rem; margin-bottom:16px;"></div>
 
                 <form asp-action="Login" method="post" class="form-luxury">
-                    @Html.AntiForgeryToken()
                     <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
 
                     <div class="mb-4">

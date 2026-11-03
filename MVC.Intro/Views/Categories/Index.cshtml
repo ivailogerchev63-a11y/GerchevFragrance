@@ -1,1 +1,57 @@
-﻿
+﻿@{
+    ViewData["Title"] = "Категории";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section style="padding: 80px 0 120px;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <p style="color:#C9A84C; letter-spacing:5px; text-transform:uppercase; font-size:0.72rem;">
+                — Разгледайте —
+            </p>
+            <h1 style="font-family:'Playfair Display',serif; font-size:3rem; color:#f0ead6;">
+                Категории
+            </h1>
+            <hr class="divider-gold" style="width:80px; margin:20px auto;">
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4">
+                <div class="product-card text-center" style="padding:40px 24px;">
+                    <div style="font-size:2.2rem; color:#C9A84C; margin-bottom:16px;">✿</div>
+                    <h5 style="font-family:'Playfair Display',serif; color:#f0ead6; margin-bottom:12px;">Флорални</h5>
+                    <p style="color:#666; font-size:0.85rem; margin-bottom:20px;">
+                        Леки и женствени аромати с роза, жасмин и пеони.
+                    </p>
+                    <a asp-controller="Product" asp-action="Index" class="btn btn-outline-gold btn-sm">
+                        Разгледай
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="product-card text-center" style="padding:40px 24px;">
+                    <div style="font-size:2.2rem; color:#C9A84C; margin-bottom:16px;">◈</div>
+                    <h5 style="font-family:'Playfair Display',serif; color:#f0ead6; margin-bottom:12px;">Ориенталски</h5>
+                    <p style="color:#666; font-size:0.85rem; margin-bottom:20px;">
+                        Дълбоки аромати с уд, амбра, кехлибар и смоли.
+                    </p>
+                    <a asp-controller="Product" asp-action="Index" class="btn btn-outline-gold btn-sm">
+                        Разгледай
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="product-card text-center" style="padding:40px 24px;">
+                    <div style="font-size:2.2rem; color:#C9A84C; margin-bottom:16px;">❋</div>
+                    <h5 style="font-family:'Playfair Display',serif; color:#f0ead6; margin-bottom:12px;">Свежи</h5>
+                    <p style="color:#666; font-size:0.85rem; margin-bottom:20px;">
+                        Цитрусови и водни аромати, перфектни за всеки ден.
+                    </p>
+                    <a asp-controller="Product" asp-action="Index" class="btn btn-outline-gold btn-sm">
+                        Разгледай
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -8,13 +8,21 @@
     <div class="container">
         <div class="text-center mb-5">
             <p style="color:#C9A84C; letter-spacing:5px; text-transform:uppercase; font-size:0.72rem;">
-                — Maison Gerchev —
+                — GerchevFragrance —
             </p>
             <h1 style="font-family:'Playfair Display',serif; font-size:3rem; color:#f0ead6;">
                 Нашата Колекция
             </h1>
             <hr class="divider-gold" style="width:80px; margin:20px auto;">
         </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div style="background:#1a2a1a; border:1px solid #3a6b3a; color:#6dbf67;
+                font-size:0.85rem; border-radius:0; padding:12px 20px; margin-bottom:28px;">
+                ✓ @TempData["Success"]
+            </div>
+        }
 
         @if (!Model.Any())
         {
@@ -27,28 +35,66 @@
             <div class="row g-4">
                 @foreach (var product in Model)
                 {
+                    var lowestPrice = product.Sizes
+                                          .Where(s => s.IsAvailable && s.Price > 0)
+                                          .OrderBy(s => s.Price)
+                                          .FirstOrDefault()?.Price
+                                      ?? product.Price;
+
+                    var availableMls = product.Sizes
+                                           .Where(s => s.IsAvailable && s.Price > 0)
+                                           .OrderBy(s => s.Ml)
+                                           .Select(s => $"{s.Ml} ml")
+                                           .ToList();
+
+                    bool hasAvailableSizes = availableMls.Any();
+
                     <div class="col-lg-4 col-md-6">
                         <div class="product-card h-100">
-                            <div style="overflow:hidden;">
-                                <img src="@product.ImageUrl" alt="@product.Name"
+                            <div style="overflow:hidden; position:relative;">
+                                <img src="@product.ImageUrl" alt="@product.Brand @product.Name"
                                      onerror="this.src='/images/images.jpg'">
+                                @if (!string.IsNullOrEmpty(product.FragranceFamily))
+                                {
+                                    <span style="position:absolute; top:12px; left:12px;
+                                        background:rgba(13,13,13,0.85); border:1px solid #2a2a2a;
+                                        color:#888; font-size:0.62rem; letter-spacing:2px;
+                                        text-transform:uppercase; padding:3px 10px;">
+                                        @product.FragranceFamily
+                                    </span>
+                                }
                             </div>
                             <div class="product-card-body d-flex flex-column" style="height:calc(100% - 280px);">
                                 <div class="product-brand">@product.Brand</div>
                                 <div class="product-name">@product.Name</div>
-                                <div class="product-meta">
-                                    <span class="badge-concentration me-2">@product.Concentration</span>
-                                    @product.Size
+                                <div class="product-meta d-flex flex-wrap gap-1 align-items-center mb-1">
+                                    <span class="badge-concentration me-1">@product.Concentration</span>
+                                    @if (hasAvailableSizes)
+                                    {
+                                        @foreach (var ml in availableMls)
+                                        {
+                                            <span style="font-size:0.7rem; color:#666; background:#1a1a1a;
+                                                border:1px solid #242424; padding:1px 7px;">@ml</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span style="font-size:0.7rem; color:#555; padding:1px 4px;">
+                                            @product.Size
+                                        </span>
+                                    }
                                 </div>
                                 @if (!string.IsNullOrEmpty(product.Description))
                                 {
-                                    <p style="color:#777; font-size:0.83rem; line-height:1.6; margin-top:8px; flex-grow:1;">
+                                    <p style="color:#777; font-size:0.83rem; line-height:1.6; margin-top:6px; flex-grow:1;">
                                         @(product.Description.Length > 90 ? product.Description[..90] + "…" : product.Description)
                                     </p>
                                 }
                                 <div class="d-flex justify-content-between align-items-center mt-auto pt-3"
                                      style="border-top:1px solid #2a2a2a;">
-                                    <span class="product-price">@product.Price.ToString("F2") лв.</span>
+                                    <span class="product-price">
+                                        @(hasAvailableSizes ? "от " : "")@lowestPrice.ToString("F2") лв.
+                                    </span>
                                     <a asp-action="Details" asp-route-id="@product.Id"
                                        class="btn btn-outline-gold btn-sm">Детайли</a>
                                 </div>

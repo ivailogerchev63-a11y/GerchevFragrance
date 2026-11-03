@@ -19,8 +19,16 @@ namespace MVC.Intro.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var featured = await _context.Products.Take(3).ToListAsync();
+            var featured = await _context.Products
+                .Include(p => p.Sizes)
+                .Take(3)
+                .ToListAsync();
             return View(featured);
+        }
+
+        public IActionResult Privacy()
+        {
+            return View();
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

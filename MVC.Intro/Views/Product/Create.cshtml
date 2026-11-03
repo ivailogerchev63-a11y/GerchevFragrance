@@ -1,37 +1,103 @@
 ﻿@model MVC.Intro.Models.Product
-
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Добави Парфюм";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Create</h1>
+<section style="min-height:80vh; padding:80px 0 120px;
+    background: radial-gradient(ellipse at 50% 0%, #1a1508 0%, #0d0d0d 70%);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="text-center mb-5">
+                    <p style="color:#C9A84C; letter-spacing:5px; text-transform:uppercase; font-size:0.7rem;">
+                        Администрация
+                    </p>
+                    <h1 style="font-family:'Playfair Display',serif; color:#f0ead6; font-size:2.2rem;">
+                        Добави Нов Парфюм
+                    </h1>
+                    <hr class="divider-gold" style="width:60px; margin:16px auto;">
+                    <p style="color:#555; font-size:0.83rem;">
+                        Трите ценови варианта (50 ml, 100 ml, 150 ml) ще бъдат генерирани автоматично
+                        спрямо зададената основна цена. Може да ги редактирате след това.
+                    </p>
+                </div>
 
-<h4>Product</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="CreateProduct">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+                <div asp-validation-summary="ModelOnly"
+                     style="color:#e07070; font-size:0.85rem; margin-bottom:20px;
+                         background:#2a1a1a; border:1px solid #5a2a2a; padding:12px 16px;"></div>
+
+                <form asp-action="Create" method="post" class="form-luxury">
+                    <div class="mb-4">
+                        <label asp-for="Name"></label>
+                        <input asp-for="Name" class="form-control" placeholder="напр. Coco Mademoiselle" />
+                        <span asp-validation-for="Name" style="color:#e07070; font-size:0.78rem;"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Brand"></label>
+                        <input asp-for="Brand" class="form-control" placeholder="напр. Chanel" />
+                        <span asp-validation-for="Brand" style="color:#e07070; font-size:0.78rem;"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Concentration"></label>
+                        <select asp-for="Concentration" class="form-control"
+                                style="background:#262626; border:1px solid #333; color:#e8e0d0; padding:12px 16px; border-radius:0; appearance:none;">
+                            <option value="">— изберете —</option>
+                            <option value="EDP">Eau de Parfum (EDP)</option>
+                            <option value="EDT">Eau de Toilette (EDT)</option>
+                            <option value="EDC">Eau de Cologne (EDC)</option>
+                            <option value="Parfum">Parfum / Extrait</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Description"></label>
+                        <textarea asp-for="Description" class="form-control" rows="4"
+                                  placeholder="Кратко описание на аромата…"
+                                  style="resize:none;"></textarea>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <label asp-for="Price"></label>
+                            <div style="position:relative;">
+                                <input asp-for="Price" class="form-control" placeholder="0.00"
+                                       style="padding-right:42px;" />
+                                <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%);
+                                    color:#666; font-size:0.85rem; pointer-events:none;">лв.</span>
+                            </div>
+                            <span asp-validation-for="Price" style="color:#e07070; font-size:0.78rem;"></span>
+                            <small style="color:#555; font-size:0.75rem;">Цена за 100 ml (основна)</small>
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="StockQuantity"></label>
+                            <input asp-for="StockQuantity" class="form-control" placeholder="0" />
+                            <span asp-validation-for="StockQuantity" style="color:#e07070; font-size:0.78rem;"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label asp-for="ImageUrl"></label>
+                        <input asp-for="ImageUrl" class="form-control" placeholder="/images/my-image.jpg" />
+                        <small style="color:#555; font-size:0.75rem;">Път спрямо wwwroot (незадължително)</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-gold w-100" style="padding:14px;">
+                        Запази Парфюма
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <a asp-action="Index" style="color:#555; font-size:0.82rem; text-decoration:none;">
+                        ← Назад към колекцията
+                    </a>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Price" class="control-label"></label>
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+</section>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

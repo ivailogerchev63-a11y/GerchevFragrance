@@ -48,6 +48,7 @@
             <div class="row g-4 justify-content-center">
                 @foreach (var product in Model)
                 {
+                    var basePrice = product.Sizes.Where(s => s.IsAvailable).OrderBy(s => s.Price).FirstOrDefault()?.Price ?? product.Price;
                     <div class="col-md-4">
                         <div class="product-card">
                             <div style="overflow:hidden;">
@@ -61,7 +62,7 @@
                                     @product.Concentration · @product.Size
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-3">
-                                    <span class="product-price">@product.Price.ToString("F2") лв.</span>
+                                    <span class="product-price">от @basePrice.ToString("F2") лв.</span>
                                     <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id"
                                        class="btn btn-outline-gold btn-sm">Детайли</a>
                                 </div>

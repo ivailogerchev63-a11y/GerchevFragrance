@@ -1,0 +1,117 @@
+@model MVC.Intro.Models.CartViewModel
+@{
+    ViewData["Title"] = "Плащане";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section style="padding: 80px 0 120px;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <p style="color:#C9A84C; letter-spacing:5px; text-transform:uppercase; font-size:0.72rem;">
+                — Финализирайте поръчката си —
+            </p>
+            <h1 style="font-family:'Playfair Display',serif; font-size:3rem; color:#f0ead6;">
+                Плащане
+            </h1>
+            <hr class="divider-gold" style="width:80px; margin:20px auto;">
+        </div>
+
+        <div class="row g-5">
+            <!-- Order summary (left) -->
+            <div class="col-lg-5 order-lg-2">
+                <div style="background:#141414; border:1px solid #2a2a2a; padding:32px;">
+                    <h5 style="font-family:'Playfair Display',serif; color:#f0ead6; margin-bottom:20px;">
+                        Преглед на поръчката
+                    </h5>
+                    @foreach (var item in Model.Items)
+                    {
+                        <div style="display:flex; justify-content:space-between; align-items:center;
+                            padding:10px 0; border-bottom:1px solid #1e1e1e;">
+                            <div>
+                                <div style="color:#f0ead6; font-size:0.88rem;">@item.ProductName</div>
+                                <div style="color:#666; font-size:0.75rem;">
+                                    @item.Concentration · @item.Ml ml · бр. @item.Quantity
+                                </div>
+                            </div>
+                            <span style="color:#C9A84C; font-size:0.9rem; white-space:nowrap;">
+                                @item.LineTotal.ToString("F2") лв.
+                            </span>
+                        </div>
+                    }
+                    <div style="display:flex; justify-content:space-between; margin-top:20px;">
+                        <span style="font-family:'Playfair Display',serif; color:#f0ead6;">Общо</span>
+                        <span style="font-family:'Playfair Display',serif; color:#C9A84C; font-size:1.2rem;">
+                            @Model.Total.ToString("F2") лв.
+                        </span>
+                    </div>
+                </div>
+                <a asp-controller="Cart" asp-action="Index"
+                   style="display:block; text-align:center; color:#555; font-size:0.78rem;
+                       text-decoration:none; margin-top:16px; letter-spacing:1px; text-transform:uppercase;">
+                    ← Редактирай количката
+                </a>
+            </div>
+
+            <!-- Shipping / billing form (right) -->
+            <div class="col-lg-7 order-lg-1">
+                <form method="post" class="form-luxury">
+                    @Html.AntiForgeryToken()
+
+                    <h5 style="font-family:'Playfair Display',serif; color:#f0ead6; margin-bottom:24px;">
+                        Данни за доставка
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <label style="color:#aaa; font-size:0.78rem; letter-spacing:1.5px; text-transform:uppercase;">Име</label>
+                            <input type="text" name="FirstName" class="form-control" placeholder="Иван" required />
+                        </div>
+                        <div class="col-6">
+                            <label style="color:#aaa; font-size:0.78rem; letter-spacing:1.5px; text-transform:uppercase;">Фамилия</label>
+                            <input type="text" name="LastName" class="form-control" placeholder="Иванов" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label style="color:#aaa; font-size:0.78rem; letter-spacing:1.5px; text-transform:uppercase;">Имейл</label>
+                        <input type="email" name="Email" class="form-control"
+                               placeholder="вашият@имейл.com"
+                               value="@(User.Identity?.Name ?? "")" required />
+                    </div>
+
+                    <div class="mb-4">
+                        <label style="color:#aaa; font-size:0.78rem; letter-spacing:1.5px; text-transform:uppercase;">Телефон</label>
+                        <input type="tel" name="Phone" class="form-control" placeholder="+359 88 888 8888" />
+                    </div>
+
+                    <div class="mb-4">
+                        <label style="color:#aaa; font-size:0.78rem; letter-spacing:1.5px; text-transform:uppercase;">Адрес</label>
+                        <input type="text" name="Address" class="form-control" placeholder="ул. Роза 1, ет. 2, ап. 5" required />
+                    </div>
+
+                    <div class="row g-3 mb-5">
+                        <div class="col-6">
+                            <label style="color:#aaa; font-size:0.78rem; letter-spacing:1.5px; text-transform:uppercase;">Град</label>
+                            <input type="text" name="City" class="form-control" placeholder="София" required />
+                        </div>
+                        <div class="col-6">
+                            <label style="color:#aaa; font-size:0.78rem; letter-spacing:1.5px; text-transform:uppercase;">Пощенски код</label>
+                            <input type="text" name="PostalCode" class="form-control" placeholder="1000" />
+                        </div>
+                    </div>
+
+                    <hr class="divider-gold" style="margin:0 0 28px;">
+
+                    <p style="color:#555; font-size:0.82rem; margin-bottom:20px;">
+                        Плащането се извършва при доставка (наложен платеж) или по банков път.
+                        Нашият екип ще се свърже с вас за потвърждение.
+                    </p>
+
+                    <button type="submit" class="btn btn-gold w-100" style="padding:15px;">
+                        Потвърди поръчката
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
