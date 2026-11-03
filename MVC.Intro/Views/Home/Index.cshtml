@@ -1,8 +1,103 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<MVC.Intro.Models.Product>
+@{
+    ViewData["Title"] = "Начало";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!-- HERO -->
+<section style="min-height: 90vh; display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(ellipse at 50% 60%, #1a1508 0%, #0d0d0d 70%);
+    position:relative; overflow:hidden;">
+    <div style="position:absolute; inset:0; background:
+        url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><circle cx=%22100%22 cy=%22100%22 r=%2280%22 fill=%22none%22 stroke=%22%23C9A84C%22 stroke-width=%220.3%22 opacity=%220.15%22/></svg>')
+        repeat; opacity:0.4;"></div>
+    <div class="container text-center" style="position:relative; z-index:2;">
+        <p style="color:#C9A84C; letter-spacing:6px; text-transform:uppercase; font-size:0.75rem; margin-bottom:20px;">
+            Maison Gerchev — Луксозни Аромати
+        </p>
+        <h1 style="font-family:'Playfair Display',serif; font-size:clamp(2.8rem,7vw,5.5rem);
+            color:#f0ead6; line-height:1.1; margin-bottom:24px;">
+            Изкуството<br><em style="color:#C9A84C;">на Аромата</em>
+        </h1>
+        <p style="color:#999; max-width:480px; margin:0 auto 40px; font-size:1rem; line-height:1.8;">
+            Открийте колекцията ни от изискани парфюми,
+            вдъхновени от красотата и елегантността.
+        </p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a asp-controller="Product" asp-action="Index" class="btn btn-gold" style="padding:14px 40px; font-size:0.8rem;">
+                Разгледай Колекцията
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURED -->
+@if (Model != null && Model.Any())
+{
+    <section style="padding: 100px 0;">
+        <div class="container">
+            <div class="text-center mb-5">
+                <p style="color:#C9A84C; letter-spacing:5px; text-transform:uppercase; font-size:0.72rem;">
+                    — Избрано —
+                </p>
+                <h2 style="font-family:'Playfair Display',serif; font-size:2.5rem; color:#f0ead6;">
+                    Препоръчани Парфюми
+                </h2>
+                <hr class="divider-gold" style="width:100px; margin:20px auto;">
+            </div>
+            <div class="row g-4 justify-content-center">
+                @foreach (var product in Model)
+                {
+                    <div class="col-md-4">
+                        <div class="product-card">
+                            <div style="overflow:hidden;">
+                                <img src="@product.ImageUrl" alt="@product.Name"
+                                     onerror="this.src='/images/images.jpg'">
+                            </div>
+                            <div class="product-card-body">
+                                <div class="product-brand">@product.Brand</div>
+                                <div class="product-name">@product.Name</div>
+                                <div class="product-meta">
+                                    @product.Concentration · @product.Size
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <span class="product-price">@product.Price.ToString("F2") лв.</span>
+                                    <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id"
+                                       class="btn btn-outline-gold btn-sm">Детайли</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="text-center mt-5">
+                <a asp-controller="Product" asp-action="Index" class="btn btn-gold">
+                    Виж Всички Парфюми
+                </a>
+            </div>
+        </div>
+    </section>
+}
+
+<!-- VALUES -->
+<section style="padding:80px 0; background:#111; border-top:1px solid #1e1e1e;">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div style="font-size:2rem; color:#C9A84C; margin-bottom:16px;">✦</div>
+                <h5 style="font-family:'Playfair Display',serif; color:#f0ead6;">Автентичност</h5>
+                <p style="color:#666; font-size:0.88rem;">Всеки аромат е създаден с внимание към детайла и страст към съвършенството.</p>
+            </div>
+            <div class="col-md-4">
+                <div style="font-size:2rem; color:#C9A84C; margin-bottom:16px;">◈</div>
+                <h5 style="font-family:'Playfair Display',serif; color:#f0ead6;">Качество</h5>
+                <p style="color:#666; font-size:0.88rem;">Използваме само най-висококачествени съставки от цял свят.</p>
+            </div>
+            <div class="col-md-4">
+                <div style="font-size:2rem; color:#C9A84C; margin-bottom:16px;">❋</div>
+                <h5 style="font-family:'Playfair Display',serif; color:#f0ead6;">Елегантност</h5>
+                <p style="color:#666; font-size:0.88rem;">Всяка бутилка е произведение на изкуството, достойно за вашата колекция.</p>
+            </div>
+        </div>
+    </div>
+</section>

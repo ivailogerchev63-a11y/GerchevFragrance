@@ -1,0 +1,66 @@
+@model MVC.Intro.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Вход";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section style="min-height:80vh; display:flex; align-items:center; padding:60px 0;
+    background: radial-gradient(ellipse at 50% 0%, #1a1508 0%, #0d0d0d 70%);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+                <div class="text-center mb-5">
+                    <p style="color:#C9A84C; letter-spacing:5px; text-transform:uppercase; font-size:0.7rem;">
+                        GerchevFragrance
+                    </p>
+                    <h2 style="font-family:'Playfair Display',serif; color:#f0ead6; font-size:2rem;">
+                        Добре дошли
+                    </h2>
+                    <hr class="divider-gold" style="width:60px; margin:16px auto;">
+                </div>
+
+                <div asp-validation-summary="ModelOnly" style="color:#e07070; font-size:0.85rem; margin-bottom:16px;"></div>
+
+                <form asp-action="Login" method="post" class="form-luxury">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                    <div class="mb-4">
+                        <label asp-for="Email"></label>
+                        <input asp-for="Email" class="form-control" placeholder="вашият@имейл.com" autocomplete="email" />
+                        <span asp-validation-for="Email" style="color:#e07070; font-size:0.78rem;"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Password"></label>
+                        <input asp-for="Password" class="form-control" placeholder="••••••••" autocomplete="current-password" />
+                        <span asp-validation-for="Password" style="color:#e07070; font-size:0.78rem;"></span>
+                    </div>
+
+                    <div class="mb-4 d-flex align-items-center gap-2">
+                        <input asp-for="RememberMe" type="checkbox"
+                               style="accent-color:#C9A84C; width:16px; height:16px;" />
+                        <label asp-for="RememberMe" style="color:#888; font-size:0.82rem; text-transform:none; letter-spacing:0; margin:0;">
+                            Запомни ме
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-gold w-100" style="padding:13px;">
+                        Влез
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p style="color:#666; font-size:0.82rem;">
+                        Нямате акаунт?
+                        <a asp-action="Register" style="color:#C9A84C; text-decoration:none;">Регистрирайте се</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

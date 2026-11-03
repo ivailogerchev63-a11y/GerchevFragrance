@@ -1,48 +1,62 @@
 ﻿@model IEnumerable<MVC.Intro.Models.Product>
 @{
-    ViewData["Title"] = "Products";
+    ViewData["Title"] = "Колекция Парфюми";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>View</h1>
+<section style="padding: 80px 0 100px;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <p style="color:#C9A84C; letter-spacing:5px; text-transform:uppercase; font-size:0.72rem;">
+                — Maison Gerchev —
+            </p>
+            <h1 style="font-family:'Playfair Display',serif; font-size:3rem; color:#f0ead6;">
+                Нашата Колекция
+            </h1>
+            <hr class="divider-gold" style="width:80px; margin:20px auto;">
+        </div>
 
-<p>
-    <a asp-controller="Product" asp-action="Create">Create New</a>
-</p>
-<table class="table table table-striped table-bordered align-middle">
-    <thead class="table-dark">
-        <tr>
-            <th scope="col" class="text-center">
-                @Html.DisplayNameFor(m => m.Id)
-            </th>
-            <th scope="col">
-                @Html.DisplayNameFor(m => m.Name)
-            </th>
-            <th scope="col" class="text-end">
-                @Html.DisplayNameFor(m => m.Price)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
+        @if (!Model.Any())
         {
-            <tr>
-                <td class="text-center">
-                    @Html.DisplayFor(m => item.Id)
-                </td>
-                <td>
-                    @Html.DisplayFor(m => item.Name)
-                </td>
-                <td class="text-end">
-                    @Html.DisplayFor(m => item.Price)
-                </td>
-                <td class="text-nowrap">
-                    <a class="btn btn-sm btn-primary me-2" asp-controller="Product" asp-action="Details" asp-route-id="@item.Id">Details</a>
-                    <form asp-action="Delete" asp-controller="Product" asp-route-id="@item.Id" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                    </form>
-                </td>
-            </tr>
+            <div class="text-center" style="color:#666; padding:60px 0;">
+                <p>Все още няма добавени парфюми.</p>
+            </div>
         }
-    </tbody>
-</table>
+        else
+        {
+            <div class="row g-4">
+                @foreach (var product in Model)
+                {
+                    <div class="col-lg-4 col-md-6">
+                        <div class="product-card h-100">
+                            <div style="overflow:hidden;">
+                                <img src="@product.ImageUrl" alt="@product.Name"
+                                     onerror="this.src='/images/images.jpg'">
+                            </div>
+                            <div class="product-card-body d-flex flex-column" style="height:calc(100% - 280px);">
+                                <div class="product-brand">@product.Brand</div>
+                                <div class="product-name">@product.Name</div>
+                                <div class="product-meta">
+                                    <span class="badge-concentration me-2">@product.Concentration</span>
+                                    @product.Size
+                                </div>
+                                @if (!string.IsNullOrEmpty(product.Description))
+                                {
+                                    <p style="color:#777; font-size:0.83rem; line-height:1.6; margin-top:8px; flex-grow:1;">
+                                        @(product.Description.Length > 90 ? product.Description[..90] + "…" : product.Description)
+                                    </p>
+                                }
+                                <div class="d-flex justify-content-between align-items-center mt-auto pt-3"
+                                     style="border-top:1px solid #2a2a2a;">
+                                    <span class="product-price">@product.Price.ToString("F2") лв.</span>
+                                    <a asp-action="Details" asp-route-id="@product.Id"
+                                       class="btn btn-outline-gold btn-sm">Детайли</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>

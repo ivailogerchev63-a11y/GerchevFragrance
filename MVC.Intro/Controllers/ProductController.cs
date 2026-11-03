@@ -1,50 +1,30 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MVC.Intro.Data;
 using MVC.Intro.Models;
-using MVC.Intro.Services;
 
 namespace MVC.Intro.Controllers
 {
-    [Route("[controller]/[action]")]
     public class ProductController : Controller
     {
-        ProductService _productService;
-        public ProductController(ProductService productService)
+        private readonly AppDbContext _context;
+
+        public ProductController(AppDbContext context)
         {
-            _productService = productService;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View(_productService.GetAllProducts());
-        }
-        [HttpGet("{id}")]//https://localhost:7206/Product/Details/52e9ba06-3b56-4f3d-973c-388efb0e4417
-        public IActionResult Details(Guid id)
-        {
-            return View(_productService.GetProductById(id));
+            var products = await _context.Products.ToListAsync();
+            return View(products);
         }
 
-        [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Details(Guid id)
         {
-            return View();
-        }
-
-        [HttpPost]
-        public IActionResult Delete(Guid id)
-        {
-            _productService.DeleteProduct(id);
-            return RedirectToAction(nameof(Index));
-        }
-
-        [HttpPost]
-        public IActionResult CreateProduct(Product product)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View("Create", product);
-            }
-            _productService.AddProduct(product);
-            return RedirectToAction(nameof(Index));
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+            if (product == null) return NotFound();
+            return View(product);
         }
     }
 }

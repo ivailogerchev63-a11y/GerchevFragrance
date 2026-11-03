@@ -1,36 +1,59 @@
 ﻿@model MVC.Intro.Models.Product
-
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Details</h1>
+<section style="padding: 80px 0 120px;">
+    <div class="container">
+        <a asp-action="Index" style="color:#C9A84C; text-decoration:none; font-size:0.78rem;
+            letter-spacing:2px; text-transform:uppercase;">
+            ← Назад към колекцията
+        </a>
+        <hr class="divider-gold" style="width:100%; margin:30px 0;">
 
-<div>
-    <h4>Product</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Id)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Price)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Price)
-        </dd>
-    </dl>
-</div>
-<div>
-    @Html.ActionLink("Edit", "Edit", new { /* id = Model.PrimaryKey */ }) |
-    <a asp-action="Index">Back to List</a>
-</div>
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-5">
+                <div style="border:1px solid #2a2a2a; overflow:hidden;">
+                    <img src="@Model.ImageUrl" alt="@Model.Name"
+                         style="width:100%; display:block; max-height:520px; object-fit:cover;"
+                         onerror="this.src='/images/images.jpg'">
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <p style="color:#C9A84C; letter-spacing:4px; text-transform:uppercase; font-size:0.72rem; margin-bottom:12px;">
+                    @Model.Brand
+                </p>
+                <h1 style="font-family:'Playfair Display',serif; font-size:3rem; color:#f0ead6; margin-bottom:16px;">
+                    @Model.Name
+                </h1>
+
+                <div class="d-flex gap-3 mb-4 flex-wrap">
+                    <span class="badge-concentration">@Model.Concentration</span>
+                    <span style="color:#777; font-size:0.82rem; align-self:center;">@Model.Size</span>
+                </div>
+
+                <p style="color:#999; line-height:1.9; font-size:0.95rem; max-width:520px; margin-bottom:32px;">
+                    @Model.Description
+                </p>
+
+                <div style="margin-bottom:32px;">
+                    <span style="font-family:'Playfair Display',serif; font-size:2.5rem; color:#C9A84C;">
+                        @Model.Price.ToString("F2") лв.
+                    </span>
+                </div>
+
+                <div style="color:#555; font-size:0.78rem; letter-spacing:1px;">
+                    @if (Model.StockQuantity > 0)
+                    {
+                        <span style="color:#6dbf67;">● В наличност</span>
+                    }
+                    else
+                    {
+                        <span style="color:#bf6767;">● Изчерпан</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
