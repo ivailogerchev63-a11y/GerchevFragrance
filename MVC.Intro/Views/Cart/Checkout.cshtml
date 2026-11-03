@@ -28,13 +28,13 @@
                         <div style="display:flex; justify-content:space-between; align-items:center;
                             padding:10px 0; border-bottom:1px solid #1e1e1e;">
                             <div>
-                                <div style="color:#f0ead6; font-size:0.88rem;">@item.ProductName</div>
+                                <div style="color:#f0ead6; font-size:0.88rem;">@item.Name</div>
                                 <div style="color:#666; font-size:0.75rem;">
-                                    @item.Concentration · @item.Ml ml · бр. @item.Quantity
+                                    @item.Concentration &middot; @item.Size &middot; бр. @item.Quantity
                                 </div>
                             </div>
                             <span style="color:#C9A84C; font-size:0.9rem; white-space:nowrap;">
-                                @item.LineTotal.ToString("F2") лв.
+                                @item.Subtotal.ToString("F2") лв.
                             </span>
                         </div>
                     }

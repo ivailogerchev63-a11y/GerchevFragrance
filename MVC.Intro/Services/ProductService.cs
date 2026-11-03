@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MVC.Intro.Data;
 using MVC.Intro.Models;
 
@@ -15,17 +15,16 @@ namespace MVC.Intro.Services
             _context = context;
         }
 
-        /// <summary>Returns all products including their size variants.</summary>
+        /// <summary>Returns all products.</summary>
         public List<Product> GetAllProducts()
         {
-            return _context.Products.Include(p => p.Sizes).ToList();
+            return _context.Products.ToList();
         }
 
-        /// <summary>Returns a single product with its size variants, or throws if not found.</summary>
+        /// <summary>Returns a single product, or throws if not found.</summary>
         public Product GetProductById(Guid id)
         {
             var product = _context.Products
-                .Include(p => p.Sizes)
                 .FirstOrDefault(p => p.Id == id);
 
             if (product == null)
@@ -34,20 +33,13 @@ namespace MVC.Intro.Services
             return product;
         }
 
-        /// <summary>Persists a new product (with its size variants) to the database.</summary>
+        /// <summary>Persists a new product to the database.</summary>
         public Product AddProduct(Product product)
         {
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
 
             product.Id = Guid.NewGuid();
-
-            // Ensure every size has a fresh ID and is linked to the product
-            foreach (var size in product.Sizes)
-            {
-                size.Id = Guid.NewGuid();
-                size.ProductId = product.Id;
-            }
 
             _logger.LogInformation(
                 "Adding product: {ProductName}, base price {ProductPrice:C}",
@@ -58,7 +50,7 @@ namespace MVC.Intro.Services
             return product;
         }
 
-        /// <summary>Removes a product and its size variants from the database.</summary>
+        /// <summary>Removes a product from the database.</summary>
         public void DeleteProduct(Guid id)
         {
             var product = _context.Products.FirstOrDefault(p => p.Id == id);
