@@ -34,14 +34,21 @@
                                 </div>
                             </div>
                             <span style="color:#C9A84C; font-size:0.9rem; white-space:nowrap;">
-                                @item.LineTotal.ToString("F2") лв.
+                                @Money.Eur(item.LineTotal)
                             </span>
+                        </div>
+                    }
+                    @if (Model.DiscountPercent > 0)
+                    {
+                        <div style="display:flex; justify-content:space-between; margin-top:16px; color:#6dbf67; font-size:0.85rem;">
+                            <span>Отстъпка (@Model.CouponCode · @Model.DiscountPercent%)</span>
+                            <span>−@Money.Eur(Model.DiscountAmount)</span>
                         </div>
                     }
                     <div style="display:flex; justify-content:space-between; margin-top:20px;">
                         <span style="font-family:'Playfair Display',serif; color:#f0ead6;">Общо</span>
                         <span style="font-family:'Playfair Display',serif; color:#C9A84C; font-size:1.2rem;">
-                            @Model.Total.ToString("F2") лв.
+                            @Money.Eur(Model.Total)
                         </span>
                     </div>
                 </div>

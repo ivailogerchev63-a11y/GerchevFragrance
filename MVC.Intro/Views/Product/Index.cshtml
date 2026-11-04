@@ -93,7 +93,7 @@
                                 <div class="d-flex justify-content-between align-items-center mt-auto pt-3"
                                      style="border-top:1px solid #2a2a2a;">
                                     <span class="product-price">
-                                        @(hasAvailableSizes ? "от " : "")@lowestPrice.ToString("F2") лв.
+                                        @(hasAvailableSizes ? "от " : "")@Money.Eur(lowestPrice)
                                     </span>
                                     <a asp-action="Details" asp-route-id="@product.Id"
                                        class="btn btn-outline-gold btn-sm">Детайли</a>

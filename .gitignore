@@ -416,3 +416,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# SQLite transient write-ahead-log sidecar files (runtime only)
+*.db-shm
+*.db-wal
+
+# Local runtime marker written by the currency migration (environment-specific)
+MVC.Intro/Database/.prices-in-eur

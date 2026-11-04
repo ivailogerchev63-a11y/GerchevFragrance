@@ -4,11 +4,12 @@ using MVC.Intro.Models;
 namespace MVC.Intro.Services
 {
     /// <summary>
-    /// Stores the shopping cart in the HTTP session as a JSON-serialised list of CartItem.
+    /// Stores the shopping cart and applied coupon in the HTTP session.
     /// </summary>
     public class CartService
     {
-        private const string CartSessionKey = "ShoppingCart";
+        private const string CartSessionKey   = "ShoppingCart";
+        private const string CouponSessionKey = "AppliedCoupon";       // "CODE|percent"
 
         private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -21,7 +22,7 @@ namespace MVC.Intro.Services
             _httpContextAccessor.HttpContext?.Session
             ?? throw new InvalidOperationException("No active HTTP session.");
 
-        // ── Read ────────────────────────────────────────────────────────────────
+        // ── Items ────────────────────────────────────────────────────────────────
 
         public List<CartItem> GetItems()
         {
@@ -32,55 +33,73 @@ namespace MVC.Intro.Services
 
         public CartViewModel GetCart()
         {
-            return new CartViewModel { Items = GetItems() };
+            var vm    = new CartViewModel { Items = GetItems() };
+            var raw   = Session.GetString(CouponSessionKey);
+            if (!string.IsNullOrEmpty(raw))
+            {
+                var parts = raw.Split('|');
+                if (parts.Length == 2 && int.TryParse(parts[1], out var pct))
+                {
+                    vm.CouponCode      = parts[0];
+                    vm.DiscountPercent = pct;
+                }
+            }
+            return vm;
         }
-
-        // ── Write ───────────────────────────────────────────────────────────────
 
         public void AddOrUpdate(CartItem incoming)
         {
-            var items = GetItems();
+            var items    = GetItems();
             var existing = items.FirstOrDefault(i =>
-                i.ProductId == incoming.ProductId &&
+                i.ProductId     == incoming.ProductId &&
                 i.ProductSizeId == incoming.ProductSizeId);
 
-            if (existing != null)
-                existing.Quantity += incoming.Quantity;
-            else
-                items.Add(incoming);
+            if (existing != null) existing.Quantity += incoming.Quantity;
+            else                  items.Add(incoming);
 
-            Save(items);
+            SaveItems(items);
         }
 
         public void UpdateQuantity(Guid productSizeId, int quantity)
         {
             var items = GetItems();
-            var item = items.FirstOrDefault(i => i.ProductSizeId == productSizeId);
+            var item  = items.FirstOrDefault(i => i.ProductSizeId == productSizeId);
             if (item == null) return;
 
-            if (quantity <= 0)
-                items.Remove(item);
-            else
-                item.Quantity = quantity;
+            if (quantity <= 0) items.Remove(item);
+            else               item.Quantity = quantity;
 
-            Save(items);
+            SaveItems(items);
         }
 
         public void RemoveItem(Guid productSizeId)
         {
             var items = GetItems();
             items.RemoveAll(i => i.ProductSizeId == productSizeId);
-            Save(items);
+            SaveItems(items);
         }
 
         public void Clear()
         {
             Session.Remove(CartSessionKey);
+            Session.Remove(CouponSessionKey);
         }
 
-        // ── Helpers ─────────────────────────────────────────────────────────────
+        // ── Coupon ───────────────────────────────────────────────────────────────
 
-        private void Save(List<CartItem> items)
+        public void ApplyCoupon(string code, int discountPercent)
+        {
+            Session.SetString(CouponSessionKey, $"{code.ToUpperInvariant()}|{discountPercent}");
+        }
+
+        public void RemoveCoupon()
+        {
+            Session.Remove(CouponSessionKey);
+        }
+
+        // ── Helpers ──────────────────────────────────────────────────────────────
+
+        private void SaveItems(List<CartItem> items)
         {
             Session.SetString(CartSessionKey, JsonSerializer.Serialize(items));
         }

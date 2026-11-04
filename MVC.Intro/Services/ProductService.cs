@@ -50,7 +50,7 @@ namespace MVC.Intro.Services
             }
 
             _logger.LogInformation(
-                "Adding product: {ProductName}, base price {ProductPrice:C}",
+                "Adding product: {ProductName}, base price {ProductPrice} EUR",
                 product.Name, product.Price);
 
             _context.Products.Add(product);

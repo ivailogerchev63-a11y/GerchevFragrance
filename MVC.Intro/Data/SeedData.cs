@@ -4,45 +4,32 @@ using MVC.Intro.Models;
 namespace MVC.Intro.Data
 {
     /// <summary>
-    /// Seeds and keeps the product catalogue up-to-date.
+    /// Authoritative perfume catalogue for Gerchev Fragrance.
     ///
-    /// Strategy: instead of "if any products exist → skip everything", we check each
-    /// product individually by ImageUrl (the one truly unique field per bottle photo).
-    /// Products that already exist are left untouched; missing ones are inserted.
-    /// This means re-running the app after adding new images always fills in the gaps.
+    /// IDENTITY RULE: products are matched to the database by the natural key
+    /// (Brand + Name + Concentration) via <see cref="CatalogueSync"/>, NOT by
+    /// image filename. Every image below was identified by VISUALLY inspecting
+    /// the actual bottle/packaging text — filenames in the source folder were
+    /// found to be scrambled and are never trusted as proof of identity.
     ///
-    /// Image → Verified product:
-    ///   Gemini_Generated_Image_62xyaw62xyaw62xy.jpg  → YSL Y EDP
-    ///   Gemini_Generated_Image_izenq4izenq4izen.jpg  → Jean Paul Gaultier Le Male EDT
-    ///   Gemini_Generated_Image_pmsttypmsttypmst.jpg  → Jean Paul Gaultier Le Male Elixir Parfum
-    ///   images (1).jpg                               → Christian Dior Sauvage Elixir
-    ///   images.jpg                                   → Tom Ford Ombré Leather Reserve Parfum
-    ///   Gemini_Generated_Image_8993a18993a18993.jpg  → Creed Aventus EDP
-    ///   Gemini_Generated_Image_ewjzp6ewjzp6ewjz.jpg  → Creed Millésime Impérial EDP
-    ///   Gemini_Generated_Image_utb5m6utb5m6utb5.jpg  → Creed Green Irish Tweed EDP
-    ///   Gemini_Generated_Image_xl3ywjxl3ywjxl3y.jpg  → Creed Silver Mountain Water EDP
+    /// All prices are in EUR (€). Prices were verified against official brand
+    /// sites / authorised European retailers (sources recorded in comments).
     /// </summary>
     public static class SeedData
     {
         public static void Initialize(AppDbContext context)
         {
-            // Build the full catalogue definition
-            var catalogue = BuildCatalogue();
-
-            // Collect images already in the DB so we skip duplicates
-            var existingImages = context.Products
-                .Select(p => p.ImageUrl)
-                .ToHashSet();
-
-            var toAdd = catalogue
-                .Where(p => !existingImages.Contains(p.ImageUrl))
-                .ToList();
-
-            if (toAdd.Count == 0) return;
-
-            context.Products.AddRange(toAdd);
-            context.SaveChanges();
+            // On a brand-new database simply insert the whole catalogue.
+            if (!context.Products.Any())
+            {
+                context.Products.AddRange(BuildCatalogue());
+                context.SaveChanges();
+            }
+            // Existing databases are reconciled by CatalogueSync (called from Program.cs).
         }
+
+        /// <summary>Exposed so the reconciliation step can read the canonical catalogue.</summary>
+        public static List<Product> Catalogue() => BuildCatalogue();
 
         // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -61,10 +48,10 @@ namespace MVC.Intro.Data
 
         private static List<Product> BuildCatalogue() => new()
         {
-            // ── 1 ─────────────────────────────────────────────────────────────────
-            // VERIFIED: Yves Saint Laurent Y Eau de Parfum
-            // yslbeauty.com · fragrantica.com
-            // Official sizes: 60 ml, 100 ml
+            // ════════════════════════ EXISTING PRODUCTS (images corrected) ════════════════════════
+
+            // YSL Y EDP — image was broken (62xyaw missing); correct verified photo assigned.
+            // Source: yslbeauty.com · fragrantica.com. Official sizes 60/100 ml.
             new Product
             {
                 Id              = Guid.NewGuid(),
@@ -74,8 +61,8 @@ namespace MVC.Intro.Data
                                   "Открива се с живото ухапване на джинджифил и бергамот, разгръща " +
                                   "сърцето си в лавандула и здравец, и завършва с дълбоки дървесни " +
                                   "и тонка-бийн акорди. Интензивен, дълготраен и неустоимо модерен.",
-                Price           = 179.99m,
-                ImageUrl        = "/images/Gemini_Generated_Image_62xyaw62xyaw62xy.jpg",
+                Price           = 92.03m,
+                ImageUrl        = "/images/YSL_Y_verified.jpg",
                 Concentration   = "EDP",
                 Size            = "100ml",
                 StockQuantity   = 18,
@@ -85,29 +72,29 @@ namespace MVC.Intro.Data
                 BaseNotes       = "Ветивер, Кедър, Тонка бийн",
                 Sizes = new List<ProductSize>
                 {
-                    Sz(50,  139.99m),
-                    Sz(100, 179.99m),
+                    Sz(60,  85.00m),
+                    Sz(100, 92.03m),
                     Sz(150, 0, available: false,
-                       reason: "YSL Y EDP не се произвежда в 150 ml. 150 ml е налично само в EDT версията.")
+                       reason: "YSL Y EDP не се произвежда в 150 ml. Официалните размери са 60 ml и 100 ml.")
                 }
             },
 
-            // ── 2 ─────────────────────────────────────────────────────────────────
-            // VERIFIED: Jean Paul Gaultier Le Male Eau de Toilette
-            // jeanpaulgaultier.com · fragrantica.com
-            // Official sizes: 40 ml, 75 ml, 125 ml, 200 ml
+            // JPG Le Male EDT — image was wrong (izenq4 was actually YSL Y). No standalone
+            // Le Male EDT photo was available in the folder, so the image stays flagged.
+            // Source: jeanpaulgaultier.com · fragrantica.com. Official sizes 40/75/125/200 ml.
             new Product
             {
                 Id              = Guid.NewGuid(),
                 Name            = "Le Male",
                 Brand           = "Jean Paul Gaultier",
                 Description     = "Емблематичният мъжки аромат на Jean Paul Gaultier — морски, " +
-                                  "лавандулов и топло ванилов. Иконичната бяло-зелена раирана торсо " +
+                                  "лавандулов и топло ванилов. Иконичната бяло-синя раирана торсо " +
                                   "бутилка е символ на поколение. Свежите начални ноти от мента " +
                                   "и бергамот отстъпват на сърце от лавандула и канела, завършващо " +
                                   "в кремообразна ванилия и сандалово дърво.",
-                Price           = 119.99m,
-                ImageUrl        = "/images/Gemini_Generated_Image_izenq4izenq4izen.jpg",
+                Price           = 61.35m,
+                // No verified standalone Le Male EDT photo in the source folder → placeholder fallback.
+                ImageUrl        = "/images/JPG_Le_Male_verified_PENDING.jpg",
                 Concentration   = "EDT",
                 Size            = "125ml",
                 StockQuantity   = 22,
@@ -117,19 +104,15 @@ namespace MVC.Intro.Data
                 BaseNotes       = "Ванилия, Тонка бийн, Сандалово дърво, Кедър",
                 Sizes = new List<ProductSize>
                 {
-                    Sz(50,  0, available: false,
-                       reason: "Le Male EDT официално се предлага в 40 ml, 75 ml, 125 ml и 200 ml. 50 ml не е стандартен размер."),
-                    Sz(100, 0, available: false,
-                       reason: "Le Male EDT официално се предлага в 75 ml и 125 ml. 100 ml не е стандартен размер."),
+                    Sz(75,  61.35m),
+                    Sz(125, 78.00m),
                     Sz(150, 0, available: false,
-                       reason: "Le Male EDT не се произвежда в 150 ml. Следващият официален размер е 200 ml.")
+                       reason: "Le Male EDT не се произвежда в 150 ml. Официалните размери са 40/75/125/200 ml.")
                 }
             },
 
-            // ── 3 ─────────────────────────────────────────────────────────────────
-            // VERIFIED: Jean Paul Gaultier Le Male Elixir Parfum
-            // jeanpaulgaultier.com (official)
-            // Official sizes: 75 ml, 125 ml
+            // JPG Le Male Elixir Parfum — image verified correct (pmstty).
+            // Source: jeanpaulgaultier.com. Official sizes 75/125 ml.
             new Product
             {
                 Id              = Guid.NewGuid(),
@@ -140,8 +123,8 @@ namespace MVC.Intro.Data
                                   "хипнотизиращ и дълготраен аромат. Иконичната торсо бутилка е " +
                                   "преработена в злато с бордо ивици, символизирайки еликсир за " +
                                   "съблазняване. Парфюмова концентрация за максимална интензивност.",
-                Price           = 189.99m,
-                ImageUrl        = "/images/Gemini_Generated_Image_pmsttypmsttypmst.jpg",
+                Price           = 97.14m,
+                ImageUrl        = "/images/JPG_Le_Male_Elixir_verified.jpg",
                 Concentration   = "Parfum",
                 Size            = "125ml",
                 StockQuantity   = 9,
@@ -151,19 +134,16 @@ namespace MVC.Intro.Data
                 BaseNotes       = "Тонка бийн, Ванилия",
                 Sizes = new List<ProductSize>
                 {
-                    Sz(50,  0, available: false,
-                       reason: "Le Male Elixir Parfum се произвежда в 75 ml и 125 ml. 50 ml не е официален размер."),
-                    Sz(100, 0, available: false,
-                       reason: "Le Male Elixir Parfum се произвежда в 75 ml и 125 ml. 100 ml не е официален размер."),
+                    Sz(75,  82.00m),
+                    Sz(125, 97.14m),
                     Sz(150, 0, available: false,
-                       reason: "Le Male Elixir Parfum не се произвежда в 150 ml. Официалните размери са 75 ml и 125 ml.")
+                       reason: "Le Male Elixir Parfum се произвежда в 75 ml и 125 ml. 150 ml не е официален размер.")
                 }
             },
 
-            // ── 4 ─────────────────────────────────────────────────────────────────
-            // VERIFIED: Christian Dior Sauvage Elixir
-            // dior.com (official, multiple regions)
-            // Official size: 60 ml only
+            // Dior Sauvage Elixir — image was broken; VERIFIED correct Elixir photo assigned
+            // (navy bottle reading "SAUVAGE ELIXIR / Dior"). Distinct from EDT/EDP/Parfum.
+            // Source: dior.com (60 ml = 244,00 €).
             new Product
             {
                 Id              = Guid.NewGuid(),
@@ -171,66 +151,61 @@ namespace MVC.Intro.Data
                 Brand           = "Christian Dior",
                 Description     = "Най-интензивната итерация на Sauvage — изключително концентриран " +
                                   "аромат с безпрецедентна дълготрайност. Богати топли подправки " +
-                                  "от канела и кардамон, лавандула и луксозни дървесни акорди " +
-                                  "оформят мощна, завладяваща следа. Произвежда се само в 60 ml — " +
-                                  "прецизен еликсир в уникален флакон.",
-                Price           = 259.99m,
-                ImageUrl        = "/images/images (1).jpg",
+                                  "от канела и кардамон, есенция от лавандула и луксозни дървесни " +
+                                  "акорди оформят мощна, завладяваща следа. Произвежда се в уникален " +
+                                  "флакон с крушовиден дизайн.",
+                Price           = 244.00m,
+                ImageUrl        = "/images/Dior_Sauvage_Elixir_verified.jpg",
                 Concentration   = "Elixir",
                 Size            = "60ml",
                 StockQuantity   = 7,
-                FragranceFamily = "Ароматен — Дървесен",
-                TopNotes        = "Канела, Кардамон, Грейпфрут",
-                HeartNotes      = "Лавандула, Мускатов орех",
-                BaseNotes       = "Амброксан, Сандалово дърво, Кашмирано дърво",
+                FragranceFamily = "Ароматен — Дървесен — Подправки",
+                TopNotes        = "Грейпфрут, Канела, Кардамон, Индийско орехче",
+                HeartNotes      = "Лавандула, Женско биле (сладник)",
+                BaseNotes       = "Сандалово дърво, Амбра, Пачули, Ароматни дървесни ноти",
                 Sizes = new List<ProductSize>
                 {
-                    Sz(50,  0, available: false,
-                       reason: "Dior Sauvage Elixir се произвежда само в 60 ml. 50 ml не е официален размер."),
+                    Sz(60,  244.00m),
                     Sz(100, 0, available: false,
-                       reason: "Dior Sauvage Elixir се произвежда само в 60 ml. 100 ml не е официален размер."),
+                       reason: "Dior Sauvage Elixir се предлага основно в 60 ml. 100 ml не е стандартен размер."),
                     Sz(150, 0, available: false,
-                       reason: "Dior Sauvage Elixir се произвежда само в 60 ml. 150 ml не е официален размер.")
+                       reason: "Dior Sauvage Elixir не се произвежда в 150 ml.")
                 }
             },
 
-            // ── 5 ─────────────────────────────────────────────────────────────────
-            // VERIFIED: Tom Ford Ombré Leather Reserve Parfum
-            // tomfordbeauty.com · sephora.com
-            // Official sizes: 50 ml, 100 ml
+            // Tom Ford Ombré Leather RESERVE (Parfum, 2026) — a SEPARATE product from the
+            // standard Ombré Leather EDP. Its image stays flagged (no Reserve photo in folder).
+            // Source: fragrantica.com (Ombré Leather Reserve, 2026).
             new Product
             {
                 Id              = Guid.NewGuid(),
                 Name            = "Ombre Leather Reserve",
                 Brand           = "Tom Ford",
-                Description     = "Ombre Leather Reserve е парфюмовата интерпретация на " +
-                                  "оригиналния кожен шедьовър — по-дълбока, по-смолиста и " +
-                                  "по-завладяваща. Ароматните сребристозелени хвойнови игли " +
-                                  "улавят духа на пустинните планини. Кипарисът добавя свежа " +
-                                  "борова нота, виолетовият лист внася зелена светлина, а " +
-                                  "черната кожа и пинйоново дърво финализират един незабравим аромат.",
-                Price           = 329.99m,
-                ImageUrl        = "/images/images.jpg",
+                Description     = "Ombre Leather Reserve е по-дълбока, по-смолиста интерпретация на " +
+                                  "кожения шедьовър на Tom Ford. Ароматните хвойнови и кипарисови " +
+                                  "ноти улавят духа на пустинните планини, докато черната кожа и " +
+                                  "бензоинът оформят плътна, мъжествена основа.",
+                Price           = 168.72m,
+                // Distinct from standard Ombré Leather EDP; no verified Reserve photo available.
+                ImageUrl        = "/images/Tom_Ford_Ombre_Leather_Reserve_PENDING.jpg",
                 Concentration   = "Parfum",
                 Size            = "100ml",
                 StockQuantity   = 11,
                 FragranceFamily = "Кожен — Дървесен",
-                TopNotes        = "Хвойна, Кипарис, Черен пипер",
-                HeartNotes      = "Виолетов лист, Черна кожа",
-                BaseNotes       = "Пинйоново дърво, Сандалово дърво, Мирра",
+                TopNotes        = "Кипарис, Хвойна, Черен пипер",
+                HeartNotes      = "Зелен акорд, Цветни ноти, Pepperwood™, Ветивер",
+                BaseNotes       = "Черна кожа, Бензоин",
                 Sizes = new List<ProductSize>
                 {
-                    Sz(50,  249.99m),
-                    Sz(100, 329.99m),
+                    Sz(50,  127.82m),
+                    Sz(100, 168.72m),
                     Sz(150, 0, available: false,
-                       reason: "Tom Ford Ombre Leather Reserve Parfum не се произвежда в 150 ml. Официалните размери са 50 ml и 100 ml.")
+                       reason: "Tom Ford Ombre Leather Reserve не се произвежда в 150 ml. Официалните размери са 50 ml и 100 ml.")
                 }
             },
 
-            // ── 6 ─────────────────────────────────────────────────────────────────
-            // VERIFIED: Creed Aventus Eau de Parfum
-            // creedfragrance.com · fragrantica.com
-            // Official sizes: 50 ml, 100 ml
+            // Creed Aventus EDP — image verified correct (8993a1).
+            // Source: creedfragrance.com · fragrantica.com. Official sizes 50/100 ml.
             new Product
             {
                 Id              = Guid.NewGuid(),
@@ -240,10 +215,9 @@ namespace MVC.Intro.Data
                                   "издържал изпитанието на времето. Открива се с пресен " +
                                   "калабрийски бергамот в хармония с иконичния акорд от ананас. " +
                                   "Сърцето от бреза и пачули отстъпва на база от дъбов мъх, " +
-                                  "амбергрис и мускус. Един от най-харесваните мъжки парфюми " +
-                                  "в историята.",
-                Price           = 549.99m,
-                ImageUrl        = "/images/Gemini_Generated_Image_8993a18993a18993.jpg",
+                                  "амбергрис и мускус.",
+                Price           = 281.21m,
+                ImageUrl        = "/images/Creed_Aventus_verified.jpg",
                 Concentration   = "EDP",
                 Size            = "100ml",
                 StockQuantity   = 10,
@@ -253,17 +227,15 @@ namespace MVC.Intro.Data
                 BaseNotes       = "Мускус, Дъбов мъх, Амбергрис, Ванилия",
                 Sizes = new List<ProductSize>
                 {
-                    Sz(50,  399.99m),
-                    Sz(100, 549.99m),
+                    Sz(50,  204.51m),
+                    Sz(100, 281.21m),
                     Sz(150, 0, available: false,
                        reason: "Creed Aventus EDP не се произвежда в 150 ml. Официалните размери са 50 ml и 100 ml.")
                 }
             },
 
-            // ── 7 ─────────────────────────────────────────────────────────────────
-            // VERIFIED: Creed Millesime Imperial Eau de Parfum
-            // creedfragrance.com · fragrantica.com
-            // Official sizes: 50 ml, 100 ml
+            // Creed Millésime Impérial EDP — image verified correct (ewjzp6).
+            // Source: creedfragrance.com · fragrantica.com. Official sizes 50/100 ml.
             new Product
             {
                 Id              = Guid.NewGuid(),
@@ -272,10 +244,9 @@ namespace MVC.Intro.Data
                 Description     = "Пресен и повдигащ духа, Millesime Imperial излъчва " +
                                   "блясък с ярки цитруси и солен морски акорд над топла " +
                                   "златна основа. Вдъхновен от слънчевата Сицилия и " +
-                                  "лазурното Средиземно море. Унисекс аромат, стартирал " +
-                                  "през 1994 г., продължава да печели сърца и до днес.",
-                Price           = 499.99m,
-                ImageUrl        = "/images/Gemini_Generated_Image_ewjzp6ewjzp6ewjz.jpg",
+                                  "лазурното Средиземно море. Унисекс аромат от 1995 г.",
+                Price           = 255.64m,
+                ImageUrl        = "/images/Creed_Millesime_Imperial_verified.jpg",
                 Concentration   = "EDP",
                 Size            = "100ml",
                 StockQuantity   = 8,
@@ -285,29 +256,27 @@ namespace MVC.Intro.Data
                 BaseNotes       = "Морски ноти, Мускус, Дървесни ноти",
                 Sizes = new List<ProductSize>
                 {
-                    Sz(50,  359.99m),
-                    Sz(100, 499.99m),
+                    Sz(50,  184.06m),
+                    Sz(100, 255.64m),
                     Sz(150, 0, available: false,
                        reason: "Creed Millesime Imperial EDP не се произвежда в 150 ml. Официалните размери са 50 ml и 100 ml.")
                 }
             },
 
-            // ── 8 ─────────────────────────────────────────────────────────────────
-            // VERIFIED: Creed Green Irish Tweed Eau de Parfum
-            // creedfragrance.com · fragrantica.com
-            // Official sizes: 50 ml, 100 ml
+            // Creed Green Irish Tweed EDP — image was broken (utb5m6 missing); no verified
+            // GIT photo in folder, so the image stays flagged.
+            // Source: creedfragrance.com · fragrantica.com. Official sizes 50/100 ml.
             new Product
             {
                 Id              = Guid.NewGuid(),
                 Name            = "Green Irish Tweed",
                 Brand           = "Creed",
                 Description     = "Зелен, свеж и неподвластен на времето — Green Irish Tweed " +
-                                  "е прецизно изработено фужерно произведение. Вдъхновен от " +
-                                  "изумруденозелените ирландски пейзажи, той съчетава свежи " +
+                                  "е прецизно изработено фужерно произведение. Съчетава свежи " +
                                   "лимонови и вербенови ноти с цветя от ирис и завършва с " +
                                   "топло сандалово дърво и амбергрис. Роден през 1985 г.",
-                Price           = 479.99m,
-                ImageUrl        = "/images/Gemini_Generated_Image_utb5m6utb5m6utb5.jpg",
+                Price           = 245.41m,
+                ImageUrl        = "/images/Creed_Green_Irish_Tweed_PENDING.jpg",
                 Concentration   = "EDP",
                 Size            = "100ml",
                 StockQuantity   = 12,
@@ -317,29 +286,26 @@ namespace MVC.Intro.Data
                 BaseNotes       = "Сандалово дърво, Амбергрис",
                 Sizes = new List<ProductSize>
                 {
-                    Sz(50,  349.99m),
-                    Sz(100, 479.99m),
+                    Sz(50,  178.95m),
+                    Sz(100, 245.41m),
                     Sz(150, 0, available: false,
                        reason: "Creed Green Irish Tweed EDP не се произвежда в 150 ml. Официалните размери са 50 ml и 100 ml.")
                 }
             },
 
-            // ── 9 ─────────────────────────────────────────────────────────────────
-            // VERIFIED: Creed Silver Mountain Water Eau de Parfum
-            // creedfragrance.com · decantboutique.com
-            // Official sizes: 30 ml, 50 ml, 100 ml, 240 ml, 500 ml
+            // Creed Silver Mountain Water EDP — image verified correct (xl3ywj).
+            // Source: creedfragrance.com · fragrantica.com.
             new Product
             {
                 Id              = Guid.NewGuid(),
                 Name            = "Silver Mountain Water",
                 Brand           = "Creed",
                 Description     = "Ултимативната алпийска есенция — Silver Mountain Water " +
-                                  "пресъздава необятната красота на Алпите. Майсторски " +
+                                  "пресъздава необятната красота на Алпите. Майсторско " +
                                   "съчетание от остри цитруси, зелен чай и горски плодове, " +
-                                  "закотвено от дървесини и мускус. Чистотата на ледените " +
-                                  "алпийски потоци в един безвременен аромат от 1995 г.",
-                Price           = 449.99m,
-                ImageUrl        = "/images/Gemini_Generated_Image_xl3ywjxl3ywjxl3y.jpg",
+                                  "закотвено от дървесни ноти и мускус. Безвременен аромат от 1995 г.",
+                Price           = 230.08m,
+                ImageUrl        = "/images/Creed_Silver_Mountain_Water_verified.jpg",
                 Concentration   = "EDP",
                 Size            = "100ml",
                 StockQuantity   = 14,
@@ -349,10 +315,281 @@ namespace MVC.Intro.Data
                 BaseNotes       = "Сандалово дърво, Мускус, Петитгрен, Галбанум",
                 Sizes = new List<ProductSize>
                 {
-                    Sz(50,  329.99m),
-                    Sz(100, 449.99m),
+                    Sz(50,  168.72m),
+                    Sz(100, 230.08m),
                     Sz(150, 0, available: false,
                        reason: "Creed Silver Mountain Water EDP не се произвежда в 150 ml. Официалните размери са 50 ml и 100 ml.")
+                }
+            },
+
+            // ════════════════════════ NEW PRODUCTS (verified from images) ════════════════════════
+
+            // Tom Ford Ombré Leather EDP (2018) — standard EDP, bottle reads just "OMBRÉ LEATHER".
+            // Source: tomfordbeauty.co.uk · fragrantica.com. Official sizes 50/100 ml.
+            // Price: Sephora US ~$156 (100 ml) → EU retail ≈ €155 (100 ml).
+            new Product
+            {
+                Id              = Guid.NewGuid(),
+                Name            = "Ombre Leather",
+                Brand           = "Tom Ford",
+                Description     = "Ombré Leather улавя духа на американския запад — прах, носен от " +
+                                  "вятъра, кожа до кожа. Чувствеността на богата черна кожа е " +
+                                  "текстурирана с пачули и ветивер, докато флоралните тонове на " +
+                                  "жасмин самбак пресъздават дивата пустинна красота, а амбра и мъх " +
+                                  "имитират топлината на скалите и пясъка.",
+                Price           = 155.00m,
+                ImageUrl        = "/images/Tom_Ford_Ombre_Leather_EDP_verified.jpg",
+                Concentration   = "EDP",
+                Size            = "100ml",
+                StockQuantity   = 13,
+                FragranceFamily = "Кожен — Флорален",
+                TopNotes        = "Кардамон",
+                HeartNotes      = "Черна кожа, Жасмин самбак",
+                BaseNotes       = "Амбра, Мъх, Пачули",
+                Sizes = new List<ProductSize>
+                {
+                    Sz(50,  118.00m),
+                    Sz(100, 155.00m),
+                    Sz(150, 0, available: false,
+                       reason: "Tom Ford Ombré Leather EDP не се произвежда в 150 ml. Официалните размери са 50 ml и 100 ml.")
+                }
+            },
+
+            // Tom Ford Black Orchid EDP — bottle reads "TOM FORD BLACK ORCHID".
+            // Source: tomfordbeauty.com · fragrantica.com. Sizes 30/50/100 ml.
+            new Product
+            {
+                Id              = Guid.NewGuid(),
+                Name            = "Black Orchid",
+                Brand           = "Tom Ford",
+                Description     = "Луксозен и чувствен аромат с богати, тъмни акорди. Black Orchid " +
+                                  "се открива с черен трюфел и иланг-иланг, докоснати от бергамот " +
+                                  "и касис. Сърцето разкрива черна орхидея, подправки и пикантни " +
+                                  "ноти, а основата от мексикански шоколад, пачули, ванилия, тамян " +
+                                  "и сандалово дърво създава незабравима следа.",
+                Price           = 165.00m,
+                ImageUrl        = "/images/Tom_Ford_Black_Orchid_verified.jpg",
+                Concentration   = "EDP",
+                Size            = "100ml",
+                StockQuantity   = 10,
+                FragranceFamily = "Ориенталски — Флорален",
+                TopNotes        = "Черен трюфел, Гардения, Касис, Иланг-иланг, Бергамот",
+                HeartNotes      = "Орхидея, Подправки, Плодови ноти, Лотос",
+                BaseNotes       = "Мексикански шоколад, Пачули, Ванилия, Тамян, Амбра, Сандалово дърво",
+                Sizes = new List<ProductSize>
+                {
+                    Sz(50,  120.00m),
+                    Sz(100, 165.00m),
+                    Sz(150, 0, available: false,
+                       reason: "Tom Ford Black Orchid EDP не се произвежда в 150 ml. Официалните размери са 30/50/100 ml.")
+                }
+            },
+
+            // Maison Francis Kurkdjian Baccarat Rouge 540 EDP — red-label clear bottle.
+            // Source: franciskurkdjian.com (official). Sizes 35/70/200 ml.
+            new Product
+            {
+                Id              = Guid.NewGuid(),
+                Name            = "Baccarat Rouge 540",
+                Brand           = "Maison Francis Kurkdjian",
+                Description     = "Поетична алхимия, родена от срещата на Maison Francis Kurkdjian " +
+                                  "и Baccarat. Легнал върху кожата като амбров, флорален и дървесен " +
+                                  "полъх — ефирен жасмин и сияен шафран подсилват минералните ноти " +
+                                  "на амбергрис и дървесните тонове на свежо срязан кедър. " +
+                                  "Графичен, луксозен и изключително концентриран подпис.",
+                Price           = 320.00m,
+                ImageUrl        = "/images/MFK_Baccarat_Rouge_540_verified.jpg",
+                Concentration   = "EDP",
+                Size            = "70ml",
+                StockQuantity   = 6,
+                FragranceFamily = "Амбров — Флорален — Дървесен",
+                TopNotes        = "Шафран, Жасмин",
+                HeartNotes      = "Амбров дървесен акорд, Амбергрис, Хедион",
+                BaseNotes       = "Смола от ела, Кедър, Захар, Амброксан, Дъбов мъх",
+                Sizes = new List<ProductSize>
+                {
+                    Sz(35,  195.00m),
+                    Sz(70,  320.00m),
+                    Sz(150, 0, available: false,
+                       reason: "Baccarat Rouge 540 EDP се произвежда в 35/70/200 ml. 150 ml не е официален размер.")
+                }
+            },
+
+            // Parfums de Marly Layton EDP — navy bottle, horses crest "PARFUMS de MARLY PARIS".
+            // Source: parfums-de-marly.com (125 ml = 225 €). Sizes 75/125/200 ml.
+            new Product
+            {
+                Id              = Guid.NewGuid(),
+                Name            = "Layton",
+                Brand           = "Parfums de Marly",
+                Description     = "Елегантен и многолик унисекс аромат. Layton съчетава свежестта " +
+                                  "на ябълка, лавандула и бергамот с флорално сърце от жасмин, " +
+                                  "виолетка и здравец, което се разгръща в топла, сладка основа от " +
+                                  "ванилия, карамелизирано кафе и благородни дървесни ноти. " +
+                                  "Интензивен и неустоимо изискан.",
+                Price           = 225.00m,
+                ImageUrl        = "/images/Parfums_de_Marly_Layton_verified.jpg",
+                Concentration   = "EDP",
+                Size            = "125ml",
+                StockQuantity   = 9,
+                FragranceFamily = "Ориенталски — Флорален",
+                TopNotes        = "Ябълка, Лавандула, Бергамот, Мандарина",
+                HeartNotes      = "Жасмин, Виолетка, Здравец",
+                BaseNotes       = "Ванилия, Кардамон, Сандалово дърво, Гаяк, Пачули, Кумарин",
+                Sizes = new List<ProductSize>
+                {
+                    Sz(75,  170.00m),
+                    Sz(125, 225.00m),
+                    Sz(150, 0, available: false,
+                       reason: "Parfums de Marly Layton се произвежда в 75/125/200 ml. 150 ml не е официален размер.")
+                }
+            },
+
+            // Parfums de Marly Greenley EDP — green bottle, horses crest.
+            // Source: parfums-de-marly.com (125 ml = 225 €) · fragrantica.com. Sizes 75/125 ml.
+            new Product
+            {
+                Id              = Guid.NewGuid(),
+                Name            = "Greenley",
+                Brand           = "Parfums de Marly",
+                Description     = "Свеж, жизнен и ведър унисекс аромат, пресъздаващ чистата енергия " +
+                                  "и свежия полъх на пролетта. Greenley се открива с искрящ взрив от " +
+                                  "зелена ябълка, сицилиански бергамот и мандарина, разгръща сърце от " +
+                                  "петитгрен, кедър и помароза, и завършва с топла основа от амброксан, " +
+                                  "мускус и пачули.",
+                Price           = 225.00m,
+                ImageUrl        = "/images/Parfums_de_Marly_Greenley_verified.jpg",
+                Concentration   = "EDP",
+                Size            = "125ml",
+                StockQuantity   = 8,
+                FragranceFamily = "Свеж — Дървесен — Зелен",
+                TopNotes        = "Зелена ябълка, Калабрийски бергамот, Мандарина",
+                HeartNotes      = "Петитгрен, Кедър, Кашмеран, Помароза, Виолетов лист",
+                BaseNotes       = "Дъбов мъх, Мускус, Амбервуд, Пачули",
+                Sizes = new List<ProductSize>
+                {
+                    Sz(75,  170.00m),
+                    Sz(125, 225.00m),
+                    Sz(150, 0, available: false,
+                       reason: "Parfums de Marly Greenley се произвежда в 75 ml и 125 ml. 150 ml не е официален размер.")
+                }
+            },
+
+            // Parfums de Marly Althaïr EDP — caramel/tan bottle, horses crest "ALTHAIR".
+            // Source: parfums-de-marly.com (125 ml = 225 €) · libertylondon.com. Sizes 75/125 ml.
+            new Product
+            {
+                Id              = Guid.NewGuid(),
+                Name            = "Althair",
+                Brand           = "Parfums de Marly",
+                Description     = "Елегантен, щедър и харизматичен — Althaïr съчетава мекотата на " +
+                                  "бурбонска ванилия, насладата на пралине и сиянието на портокалов " +
+                                  "цвят. Пикантна канела и кардамон внасят топлина, докато кремообразни " +
+                                  "дървесни ноти и амбра обгръщат аромата в чувствена, трайна следа.",
+                Price           = 225.00m,
+                ImageUrl        = "/images/Parfums_de_Marly_Althair_verified.jpg",
+                Concentration   = "EDP",
+                Size            = "125ml",
+                StockQuantity   = 7,
+                FragranceFamily = "Ориенталски — Сладък — Гурме",
+                TopNotes        = "Бергамот, Портокалов цвят, Канела, Кардамон",
+                HeartNotes      = "Елеми, Бурбонска ванилия",
+                BaseNotes       = "Амброксан, Гаяково дърво, Пралине, Мускус",
+                Sizes = new List<ProductSize>
+                {
+                    Sz(75,  170.00m),
+                    Sz(125, 225.00m),
+                    Sz(150, 0, available: false,
+                       reason: "Parfums de Marly Althaïr се произвежда в 75 ml и 125 ml. 150 ml не е официален размер.")
+                }
+            },
+
+            // Parfums de Marly Delina Exclusif EDP — pink bottle with tassel "DELINA EXCLUSIF".
+            // Source: parfums-de-marly.com. Sizes 30/75 ml. (75 ml ≈ €385 EU retail.)
+            new Product
+            {
+                Id              = Guid.NewGuid(),
+                Name            = "Delina Exclusif",
+                Brand           = "Parfums de Marly",
+                Description     = "Пищна, наситена роза при здрач. Delina Exclusif е по-дълбока, " +
+                                  "по-интензивна интерпретация на емблематичната Delina — дамаска роза " +
+                                  "с обгръщаща, дръзка и незабравима следа. Личи, круша и бергамот " +
+                                  "водят към турска роза и тамян, а ванилия, амбра и дървесни ноти " +
+                                  "оформят чувствена, луксозна основа.",
+                Price           = 385.00m,
+                ImageUrl        = "/images/Parfums_de_Marly_Delina_Exclusif_verified.jpg",
+                Concentration   = "EDP",
+                Size            = "75ml",
+                StockQuantity   = 5,
+                FragranceFamily = "Флорален — Ориенталски — Роза",
+                TopNotes        = "Бергамот, Личи, Круша, Тамян",
+                HeartNotes      = "Турска роза, Уд, Тамян",
+                BaseNotes       = "Ванилия, Амбра, Дървесни ноти",
+                Sizes = new List<ProductSize>
+                {
+                    Sz(30,  195.00m),
+                    Sz(75,  385.00m),
+                    Sz(150, 0, available: false,
+                       reason: "Parfums de Marly Delina Exclusif се произвежда в 30 ml и 75 ml. 150 ml не е официален размер.")
+                }
+            },
+
+            // Carolina Herrera Good Girl EDP — midnight-blue stiletto bottle.
+            // Source: carolinaherrera.com · sephora.com. Sizes 30/50/80 ml.
+            new Product
+            {
+                Id              = Guid.NewGuid(),
+                Name            = "Good Girl",
+                Brand           = "Carolina Herrera",
+                Description     = "Чувствен амбров флорален аромат, който възпява двойствеността на " +
+                                  "съвременната жена, в иконичната бутилка стилето в среднощно синьо. " +
+                                  "Ярък жасмин и кремообразна тубероза контрастират с топлината на " +
+                                  "печен тонка боб и какао, докато бадем и кафе добавят смела " +
+                                  "жизненост.",
+                Price           = 125.00m,
+                ImageUrl        = "/images/Carolina_Herrera_Good_Girl_verified.jpg",
+                Concentration   = "EDP",
+                Size            = "80ml",
+                StockQuantity   = 15,
+                FragranceFamily = "Амбров — Флорален",
+                TopNotes        = "Бадем, Кафе, Бергамот, Лимон",
+                HeartNotes      = "Тубероза, Жасмин самбак, Ирис, Портокалов цвят",
+                BaseNotes       = "Тонка боб, Какао, Сандалово дърво, Ванилия",
+                Sizes = new List<ProductSize>
+                {
+                    Sz(30,  78.00m),
+                    Sz(50,  98.00m),
+                    Sz(80,  125.00m),
+                    Sz(150, 0, available: false,
+                       reason: "Carolina Herrera Good Girl EDP се произвежда в 30/50/80 ml. 150 ml не е официален размер.")
+                }
+            },
+
+            // Carolina Herrera Bad Boy EDT — black/gold lightning-bolt bottle.
+            // Source: carolinaherrera.com · sephora.com. Sizes 50/100/150 ml.
+            new Product
+            {
+                Id              = Guid.NewGuid(),
+                Name            = "Bad Boy",
+                Brand           = "Carolina Herrera",
+                Description     = "Наелектризиращ амбров ароматен парфюм, който възпява бунтаря в " +
+                                  "мъжа, в иконичната бутилка-светкавица. Свеж градински чай и " +
+                                  "искрящ пипер с бергамот контрастират с топъл тонка боб, богато " +
+                                  "какао и земен ветивер, за смел, магнетичен и чувствен аромат.",
+                Price           = 120.00m,
+                ImageUrl        = "/images/Carolina_Herrera_Bad_Boy_verified.jpg",
+                Concentration   = "EDT",
+                Size            = "100ml",
+                StockQuantity   = 16,
+                FragranceFamily = "Ориенталски — Ароматен",
+                TopNotes        = "Градински чай, Черен и бял пипер, Зелен бергамот",
+                HeartNotes      = "Кедър",
+                BaseNotes       = "Тонка боб, Какао, Ветивер, Амбров дървесен акорд",
+                Sizes = new List<ProductSize>
+                {
+                    Sz(50,  88.00m),
+                    Sz(100, 120.00m),
+                    Sz(150, 145.00m)
                 }
             }
         };

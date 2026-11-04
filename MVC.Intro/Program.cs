@@ -69,8 +69,20 @@ namespace MVC.Intro
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                db.Database.EnsureCreated();
+
+                // EnsureCreated returns true when it just created the schema,
+                // i.e. this is a brand-new database that SeedData fills in EUR.
+                bool freshlyCreated = db.Database.EnsureCreated();
                 SeedData.Initialize(db);
+
+                // Convert any legacy BGN prices to EUR exactly once. A freshly
+                // created DB is already seeded in EUR, so we only drop the marker.
+                CurrencyMigration.EnsurePricesInEur(db, dbFolder, alreadyEur: freshlyCreated);
+
+                // Reconcile the live catalogue with the verified canonical data:
+                // fixes product images, adds newly identified perfumes and keeps
+                // prices/notes correct. Idempotent and never deletes data.
+                CatalogueSync.Reconcile(db);
             }
 
             // ── Routes ────────────────────────────────────────────────────────────

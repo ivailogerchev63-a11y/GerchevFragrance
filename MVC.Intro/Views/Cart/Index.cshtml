@@ -55,7 +55,7 @@
                                     @item.Concentration · @item.Ml ml
                                 </div>
                                 <div style="color:#C9A84C; font-size:0.9rem; margin-top:8px;">
-                                    @item.UnitPrice.ToString("F2") лв. / бр.
+                                    @Money.Eur(item.UnitPrice) / бр.
                                 </div>
                             </div>
                             <div style="display:flex; flex-direction:column; align-items:flex-end; gap:12px;">
@@ -74,7 +74,7 @@
                                 </form>
                                 <!-- Line total -->
                                 <span style="font-family:'Playfair Display',serif; color:#C9A84C; font-size:1.05rem;">
-                                    @item.LineTotal.ToString("F2") лв.
+                                    @Money.Eur(item.LineTotal)
                                 </span>
                                 <!-- Remove -->
                                 <form asp-controller="Cart" asp-action="Remove" method="post">
@@ -117,8 +117,16 @@
                         <div style="display:flex; justify-content:space-between; margin-bottom:12px;
                             color:#888; font-size:0.85rem;">
                             <span>Артикули (@Model.TotalItems)</span>
-                            <span>@Model.Total.ToString("F2") лв.</span>
+                            <span>@Money.Eur(Model.Subtotal)</span>
                         </div>
+                        @if (Model.DiscountPercent > 0)
+                        {
+                            <div style="display:flex; justify-content:space-between; margin-bottom:12px;
+                                color:#6dbf67; font-size:0.85rem;">
+                                <span>Отстъпка (@Model.CouponCode · @Model.DiscountPercent%)</span>
+                                <span>−@Money.Eur(Model.DiscountAmount)</span>
+                            </div>
+                        }
                         <div style="display:flex; justify-content:space-between; margin-bottom:12px;
                             color:#888; font-size:0.85rem;">
                             <span>Доставка</span>
@@ -128,7 +136,7 @@
                         <div style="display:flex; justify-content:space-between; margin-bottom:28px;">
                             <span style="font-family:'Playfair Display',serif; color:#f0ead6; font-size:1.1rem;">Общо</span>
                             <span style="font-family:'Playfair Display',serif; color:#C9A84C; font-size:1.3rem;">
-                                @Model.Total.ToString("F2") лв.
+                                @Money.Eur(Model.Total)
                             </span>
                         </div>
                         <a asp-controller="Cart" asp-action="Checkout"

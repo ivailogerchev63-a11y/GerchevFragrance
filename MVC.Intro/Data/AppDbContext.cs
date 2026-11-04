@@ -10,6 +10,7 @@ namespace MVC.Intro.Data
 
         public DbSet<Product> Products { get; set; } = null!;
         public DbSet<ProductSize> ProductSizes { get; set; } = null!;
+        public DbSet<NewsletterSubscriber> NewsletterSubscribers { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -28,6 +29,15 @@ namespace MVC.Intro.Data
             builder.Entity<Product>()
                 .Property(p => p.Price)
                 .HasColumnType("decimal(18,2)");
+
+            // Ensure one subscriber per email
+            builder.Entity<NewsletterSubscriber>()
+                .HasIndex(s => s.Email)
+                .IsUnique();
+
+            builder.Entity<NewsletterSubscriber>()
+                .HasIndex(s => s.CouponCode)
+                .IsUnique();
         }
     }
 }

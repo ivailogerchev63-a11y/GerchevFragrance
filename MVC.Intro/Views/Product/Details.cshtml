@@ -150,7 +150,7 @@
                                 {
                                     bool isFirst = size.Id == firstAvailable?.Id;
                                     <label class="size-option @(isFirst ? "selected" : "")"
-                                           data-price="@size.Price.ToString("F2")"
+                                           data-price="@Money.Eur(size.Price)"
                                            data-size-id="@size.Id"
                                            style="cursor:pointer;
                                                border:1px solid @(isFirst ? "#C9A84C" : "#333");
@@ -182,7 +182,7 @@
                             <div style="margin-bottom:28px;">
                                 <span id="displayPrice" style="font-family:'Playfair Display',serif;
                                     font-size:2.5rem; color:#C9A84C;">
-                                    @firstAvailable.Price.ToString("F2") лв.
+                                    @Money.Eur(firstAvailable.Price)
                                 </span>
                             </div>
 
@@ -221,7 +221,7 @@
                             <!-- All sizes unavailable -->
                             <div style="margin-bottom:28px;">
                                 <span style="font-family:'Playfair Display',serif; font-size:2.5rem; color:#C9A84C;">
-                                    @Model.Price.ToString("F2") лв.
+                                    @Money.Eur(Model.Price)
                                 </span>
                             </div>
                             <p style="color:#555; font-size:0.83rem; letter-spacing:0.5px;">
@@ -235,7 +235,7 @@
                 {
                     <div style="margin-bottom:32px;">
                         <span style="font-family:'Playfair Display',serif; font-size:2.5rem; color:#C9A84C;">
-                            @Model.Price.ToString("F2") лв.
+                            @Money.Eur(Model.Price)
                         </span>
                     </div>
                     <p style="color:#555; font-size:0.85rem;">Няма налични размери за поръчка в момента.</p>
@@ -265,7 +265,8 @@
             var price = this.getAttribute('data-price');
             var priceEl = document.getElementById('displayPrice');
             if (priceEl && price) {
-                priceEl.textContent = price.replace('.', ',') + ' лв.';
+                // data-price already holds the fully formatted EUR string, e.g. "€149.99"
+                priceEl.textContent = price;
             }
         });
     });

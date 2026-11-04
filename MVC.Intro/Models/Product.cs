@@ -14,7 +14,7 @@ namespace MVC.Intro.Models
         [Display(Name = "Описание")]
         public string? Description { get; set; }
 
-        [Display(Name = "Основна цена (лв.)")]
+        [Display(Name = "Основна цена (EUR)")]
         [Range(0.01, 99999, ErrorMessage = "Цената трябва да е положително число")]
         public decimal Price { get; set; }
 
@@ -71,7 +71,7 @@ namespace MVC.Intro.Models
         [Range(1, 9999)]
         public int Ml { get; set; }
 
-        /// <summary>Price for this specific size in BGN.</summary>
+        /// <summary>Price for this specific size in EUR.</summary>
         [Range(0.01, 99999)]
         public decimal Price { get; set; }
 
