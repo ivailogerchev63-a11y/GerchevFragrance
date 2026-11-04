@@ -1,259 +1,729 @@
-﻿<!DOCTYPE html>
+@inject MVC.Intro.Services.CartService CartService
+@{
+    var cartSummary = CartService.GetCartViewModel();
+}
+<!DOCTYPE html>
 <html lang="bg">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] — GerchevFragrance</title>
+    <title>@ViewData["Title"] — Gerchev Fragrance | Луксозни Парфюми</title>
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS & Icons -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
     <style>
         :root {
             --gold: #C9A84C;
-            --gold-light: #e8c96a;
-            --dark: #0d0d0d;
-            --dark2: #1a1a1a;
-            --dark3: #262626;
+            --gold-light: #F3E5AB;
+            --gold-dark: #9A7B38;
+            --dark-base: #080808;
+            --dark-card: #121212;
+            --dark-elevated: #1a1a1a;
+            --dark-border: #242424;
+            --text-light: #f5f2eb;
+            --text-muted: #9e9a91;
+            --font-display: 'Cinzel', serif;
+            --font-serif: 'Playfair Display', serif;
+            --font-body: 'Montserrat', sans-serif;
+            --transition-smooth: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
+
         * { box-sizing: border-box; }
+
         body {
-            background-color: var(--dark);
-            color: #e8e0d0;
-            font-family: 'Lato', sans-serif;
+            background-color: var(--dark-base);
+            color: var(--text-light);
+            font-family: var(--font-body);
             font-weight: 300;
+            line-height: 1.7;
+            overflow-x: hidden;
         }
-        h1, h2, h3, h4, h5, .brand-font {
-            font-family: 'Playfair Display', serif;
+
+        /* Typography */
+        h1, h2, h3, h4, h5, .brand-display {
+            font-family: var(--font-serif);
+            letter-spacing: 0.5px;
         }
+
+        .font-cinzel { font-family: var(--font-display); }
+
+        /* ANNOUNCEMENT BAR */
+        .announcement-bar {
+            background: linear-gradient(90deg, #0d0d0d 0%, #1c1708 50%, #0d0d0d 100%);
+            border-bottom: 1px solid rgba(201, 168, 76, 0.25);
+            padding: 8px 15px;
+            font-size: 0.72rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--gold-light);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .announcement-bar strong {
+            color: #fff;
+            letter-spacing: 1px;
+            background: rgba(201, 168, 76, 0.15);
+            padding: 2px 8px;
+            border: 1px solid var(--gold);
+            margin: 0 4px;
+        }
+
         /* NAVBAR */
         .navbar-luxury {
-            background: rgba(13,13,13,0.97);
-            border-bottom: 1px solid #2a2a2a;
-            padding: 18px 0;
-            backdrop-filter: blur(10px);
+            background: rgba(8, 8, 8, 0.95);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--dark-border);
+            padding: 16px 0;
+            transition: var(--transition-smooth);
+            z-index: 1040;
         }
+
         .navbar-brand-luxury {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.6rem;
-            color: var(--gold) !important;
-            letter-spacing: 3px;
-            text-transform: uppercase;
             text-decoration: none;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.1;
         }
-        .navbar-luxury .nav-link {
-            color: #ccc !important;
-            font-family: 'Lato', sans-serif;
-            font-weight: 400;
-            letter-spacing: 1.5px;
+
+        .brand-title {
+            font-family: var(--font-display);
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: 5px;
+            color: var(--text-light);
             text-transform: uppercase;
-            font-size: 0.78rem;
-            margin: 0 10px;
             transition: color 0.3s;
         }
-        .navbar-luxury .nav-link:hover { color: var(--gold) !important; }
-        .btn-gold {
-            background: linear-gradient(135deg, var(--gold), #a8873a);
-            color: #0d0d0d;
-            border: none;
-            font-family: 'Lato', sans-serif;
-            font-weight: 700;
-            letter-spacing: 2px;
+
+        .brand-sub {
+            font-family: var(--font-body);
+            font-size: 0.55rem;
+            letter-spacing: 4px;
             text-transform: uppercase;
-            font-size: 0.75rem;
-            padding: 10px 28px;
-            transition: all 0.3s;
-        }
-        .btn-gold:hover {
-            background: linear-gradient(135deg, var(--gold-light), var(--gold));
-            color: #0d0d0d;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 20px rgba(201,168,76,0.3);
-        }
-        .btn-outline-gold {
-            border: 1px solid var(--gold);
             color: var(--gold);
-            background: transparent;
-            font-family: 'Lato', sans-serif;
-            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        .navbar-luxury .nav-link {
+            color: #bbb !important;
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 500;
             letter-spacing: 2px;
             text-transform: uppercase;
-            font-size: 0.75rem;
-            padding: 9px 26px;
-            transition: all 0.3s;
+            padding: 8px 14px !important;
+            position: relative;
+            transition: color 0.3s ease;
         }
+
+        .navbar-luxury .nav-link:hover,
+        .navbar-luxury .nav-link.active {
+            color: var(--gold) !important;
+        }
+
+        .navbar-luxury .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            width: 0;
+            height: 1px;
+            background: var(--gold);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .navbar-luxury .nav-link:hover::after,
+        .navbar-luxury .nav-link.active::after {
+            width: 60%;
+        }
+
+        /* BUTTONS */
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold) 0%, #aa8533 100%);
+            color: #080808;
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 0.75rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            padding: 12px 30px;
+            border: 1px solid var(--gold);
+            border-radius: 0;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 20px rgba(201, 168, 76, 0.2);
+        }
+
+        .btn-gold:hover {
+            background: linear-gradient(135deg, #dfc26a 0%, var(--gold) 100%);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(201, 168, 76, 0.35);
+        }
+
+        .btn-outline-gold {
+            background: transparent;
+            color: var(--gold);
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 0.75rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            padding: 11px 28px;
+            border: 1px solid var(--gold);
+            border-radius: 0;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
         .btn-outline-gold:hover {
             background: var(--gold);
-            color: #0d0d0d;
+            color: #080808;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(201, 168, 76, 0.25);
         }
-        /* CARDS */
-        .product-card {
-            background: var(--dark2);
-            border: 1px solid #2a2a2a;
-            transition: all 0.4s;
-            overflow: hidden;
-        }
-        .product-card:hover {
-            border-color: var(--gold);
-            transform: translateY(-6px);
-            box-shadow: 0 12px 40px rgba(201,168,76,0.15);
-        }
-        .product-card img {
-            width: 100%;
-            height: 280px;
-            object-fit: cover;
-            transition: transform 0.5s;
-        }
-        .product-card:hover img { transform: scale(1.04); }
-        .product-card-body { padding: 22px; }
-        .product-brand {
-            color: var(--gold);
-            font-size: 0.7rem;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-        .product-name {
-            font-family: 'Playfair Display', serif;
+
+        /* Nav Icons & Badge */
+        .nav-icon-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #ccc;
             font-size: 1.15rem;
-            color: #f0ead6;
-            margin-bottom: 6px;
+            padding: 8px 12px;
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
-        .product-meta {
-            color: #888;
-            font-size: 0.78rem;
-            margin-bottom: 12px;
-        }
-        .product-price {
+
+        .nav-icon-btn:hover {
             color: var(--gold);
-            font-size: 1.2rem;
-            font-family: 'Playfair Display', serif;
+            border-color: rgba(201, 168, 76, 0.3);
+            background: rgba(255,255,255,0.03);
         }
-        /* FOOTER */
-        footer {
-            background: var(--dark2);
-            border-top: 1px solid #2a2a2a;
-            padding: 40px 0 20px;
-            margin-top: 80px;
+
+        .cart-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: var(--gold);
+            color: #080808;
+            font-size: 0.65rem;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        footer .footer-brand {
-            font-family: 'Playfair Display', serif;
-            color: var(--gold);
-            font-size: 1.4rem;
-            letter-spacing: 3px;
-        }
-        footer p { color: #666; font-size: 0.83rem; }
-        /* FORMS */
-        .form-luxury .form-control {
-            background: var(--dark3);
-            border: 1px solid #333;
-            color: #e8e0d0;
-            padding: 12px 16px;
-            border-radius: 0;
-        }
-        .form-luxury .form-control:focus {
-            background: var(--dark3);
-            border-color: var(--gold);
-            color: #fff;
-            box-shadow: 0 0 0 2px rgba(201,168,76,0.15);
-        }
-        .form-luxury label {
-            color: #aaa;
-            font-size: 0.78rem;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
+
+        /* Dividers */
         .divider-gold {
             border: none;
             height: 1px;
-            background: linear-gradient(to right, transparent, var(--gold), transparent);
-            margin: 40px 0;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 30px auto;
         }
-        .badge-concentration {
-            background: transparent;
+
+        /* PRODUCT CARDS */
+        .product-card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .product-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7), 0 0 25px rgba(201, 168, 76, 0.15);
+        }
+
+        .product-image-wrap {
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1c1c1c 0%, #0d0d0d 100%);
+            padding-top: 110%; /* 1:1.1 Aspect Ratio */
+        }
+
+        .product-image-wrap img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .product-card:hover .product-image-wrap img {
+            transform: scale(1.06);
+        }
+
+        .badge-bestseller {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            background: rgba(8, 8, 8, 0.85);
             border: 1px solid var(--gold);
             color: var(--gold);
-            font-size: 0.68rem;
+            font-size: 0.62rem;
+            font-weight: 600;
             letter-spacing: 2px;
-            padding: 3px 10px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            z-index: 2;
+            backdrop-filter: blur(5px);
+        }
+
+        .badge-discount {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: #a82626;
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 4px 8px;
+            z-index: 2;
+        }
+
+        .card-actions-hover {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: linear-gradient(to top, rgba(8,8,8,0.95), transparent);
+            display: flex;
+            gap: 8px;
+            transform: translateY(100%);
+            opacity: 0;
+            transition: var(--transition-smooth);
+            z-index: 3;
+        }
+
+        .product-card:hover .card-actions-hover {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .product-body {
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            background: var(--dark-card);
+        }
+
+        .product-brand {
+            font-size: 0.7rem;
+            letter-spacing: 2.5px;
+            color: var(--gold);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .product-title {
+            font-family: var(--font-serif);
+            font-size: 1.15rem;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            line-height: 1.35;
+        }
+
+        .product-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .product-price-row {
+            margin-top: auto;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            border-top: 1px solid var(--dark-border);
+            padding-top: 14px;
+        }
+
+        .current-price {
+            font-family: var(--font-serif);
+            font-size: 1.25rem;
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .original-price {
+            font-size: 0.85rem;
+            color: #666;
+            text-decoration: line-through;
+        }
+
+        /* Accessible Animations */
+        @@media (prefers-reduced-motion: reduce) {
+            *, ::before, ::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Offcanvas Drawer */
+        .offcanvas-luxury {
+            background-color: var(--dark-card);
+            border-left: 1px solid var(--dark-border);
+            color: var(--text-light);
+        }
+
+        /* Toast Alert */
+        .toast-luxury {
+            background: rgba(18, 18, 18, 0.95);
+            border: 1px solid var(--gold);
+            color: #fff;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Luxury Footer */
+        footer.luxury-footer {
+            background: #050505;
+            border-top: 1px solid var(--dark-border);
+            padding: 80px 0 30px;
+            margin-top: 100px;
+        }
+
+        .footer-heading {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            color: var(--gold);
+            text-transform: uppercase;
+            margin-bottom: 22px;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--gold);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #1a1a1a;
+            padding-top: 30px;
+            margin-top: 60px;
+            font-size: 0.8rem;
+            color: #666;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-luxury sticky-top">
-        <div class="container">
-            <a class="navbar-brand-luxury" asp-controller="Home" asp-action="Index">
-                ✦ GerchevFragrance
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain"
-                    style="border-color:#333; color:#aaa;">
-                <span class="navbar-toggler-icon" style="filter:invert(1)"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navMain">
-                <ul class="navbar-nav mx-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Home" asp-action="Index">Начало</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Product" asp-action="Index">Парфюми</a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center gap-2">
-                    @{
-                        // Show cart icon with item count from session
-                        var cartJson = Context.Session.GetString("ShoppingCart");
-                        int cartCount = 0;
-                        if (!string.IsNullOrEmpty(cartJson))
+    <!-- 1. SOPHISTICATED ANNOUNCEMENT BAR -->
+    <div class="announcement-bar">
+        <span>✦ ДОБРЕ ДОШЛИ В GERCHEV FRAGRANCE · ВЗЕМЕТЕ 10% ОТСТЪПКА С КОД: <strong>GERCHEV10</strong> · БЕЗПЛАТНА ДОСТАВКА НАД 150 ЛВ. ✦</span>
+    </div>
+
+    <!-- 2. LUXURY NAVBAR -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-luxury sticky-top">
+            <div class="container">
+                <!-- Brand Logo -->
+                <a class="navbar-brand-luxury me-lg-4" asp-controller="Home" asp-action="Index">
+                    <span class="brand-title">GERCHEV</span>
+                    <span class="brand-sub">FRAGRANCE</span>
+                </a>
+
+                <!-- Mobile Menu Toggler -->
+                <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+                    <i class="bi bi-list fs-2 text-warning"></i>
+                </button>
+
+                <!-- Navigation Links -->
+                <div class="collapse navbar-collapse" id="navMain">
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Начало</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Product" asp-action="Index">Колекция</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Product" asp-action="Index" asp-route-category="Men">Мъжки</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Product" asp-action="Index" asp-route-category="Women">Дамски</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Product" asp-action="Index" asp-route-category="Unisex">Унисекс</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/#bestsellers">Бестселъри</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#contact">Контакти</a>
+                        </li>
+                    </ul>
+
+                    <!-- Right Utilities -->
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Search Icon -->
+                        <button class="nav-icon-btn" data-bs-toggle="modal" data-bs-target="#searchModal" title="Търсене">
+                            <i class="bi bi-search"></i>
+                        </button>
+
+                        <!-- Shopping Cart Button with Live Counter -->
+                        <a href="/Cart" class="nav-icon-btn" id="navCartBtn" title="Количка">
+                            <i class="bi bi-bag"></i>
+                            <span class="cart-badge" id="navCartCount">@cartSummary.TotalItems</span>
+                        </a>
+
+                        <!-- User Profile / Auth -->
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
-                            try
-                            {
-                                var cartItems = System.Text.Json.JsonSerializer.Deserialize<List<MVC.Intro.Models.CartItem>>(cartJson);
-                                cartCount = cartItems?.Sum(i => i.Quantity) ?? 0;
-                            }
-                            catch { }
+                            <div class="dropdown">
+                                <button class="btn btn-outline-gold btn-sm dropdown-toggle py-1 px-3" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-person me-1"></i> @User.Identity.Name
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" style="background:var(--dark-card); border-color:#333;">
+                                    <li><a class="dropdown-item py-2" asp-controller="Product" asp-action="Index">Колекция</a></li>
+                                    <li><hr class="dropdown-divider border-secondary"></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item text-danger py-2">Изход</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
                         }
-                    }
-                    <a asp-controller="Cart" asp-action="Index"
-                       style="color:#ccc; text-decoration:none; font-size:0.78rem; letter-spacing:1.5px;
-                           text-transform:uppercase; margin: 0 10px; transition:color 0.3s; position:relative;"
-                       onmouseover="this.style.color='#C9A84C'" onmouseout="this.style.color='#ccc'">
-                        Количка@(cartCount > 0 ? $" ({cartCount})" : "")
-                    </a>
-                    @if (User.Identity != null && User.Identity.IsAuthenticated)
-                    {
-                        <span style="color:#888; font-size:0.78rem; letter-spacing:1px;">@User.Identity.Name</span>
-                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-outline-gold btn-sm">Изход</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-gold btn-sm">Вход</a>
-                        <a asp-controller="Account" asp-action="Register" class="btn btn-gold btn-sm">Регистрация</a>
-                    }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-gold btn-sm d-none d-sm-inline-flex">Вход</a>
+                            <a asp-controller="Account" asp-action="Register" class="btn btn-gold btn-sm d-none d-md-inline-flex">Регистрация</a>
+                        }
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
-    <main>
+    <!-- MAIN BODY -->
+    <main role="main">
         @RenderBody()
     </main>
 
-    <footer>
-        <div class="container text-center">
-            <div class="footer-brand mb-3">✦ GerchevFragrance</div>
-            <p>Луксозни парфюми от Maison Gerchev</p>
-            <hr class="divider-gold" style="margin: 20px auto; width:200px;">
-            <p>&copy; 2026 GerchevFragrance. Всички права запазени.</p>
+    <!-- 10. LUXURY FOOTER -->
+    <footer class="luxury-footer" id="contact">
+        <div class="container">
+            <div class="row g-5">
+                <!-- Column 1: Brand Story -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="brand-title mb-2" style="font-size:1.5rem;">GERCHEV</div>
+                    <div class="brand-sub mb-3" style="font-size:0.65rem;">HAUTE PARFUMERIE</div>
+                    <p style="color:#888; font-size:0.85rem; line-height:1.8; max-width:320px;">
+                        Gerchev Fragrance е куратор на най-изтънчените и признати дизайнерски и нишови парфюми. Всяка бутилка носи история, класа и непреходно очарование.
+                    </p>
+                    <div class="d-flex gap-3 mt-4">
+                        <a href="https://instagram.com" target="_blank" class="nav-icon-btn p-2" title="Instagram">
+                            <i class="bi bi-instagram fs-5"></i>
+                        </a>
+                        <a href="https://facebook.com" target="_blank" class="nav-icon-btn p-2" title="Facebook">
+                            <i class="bi bi-facebook fs-5"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Column 2: Navigation -->
+                <div class="col-lg-2 col-md-6 col-6">
+                    <h5 class="footer-heading">Колекции</h5>
+                    <ul class="footer-links">
+                        <li><a asp-controller="Product" asp-action="Index">Всички парфюми</a></li>
+                        <li><a asp-controller="Product" asp-action="Index" asp-route-category="Men">Мъжка селекция</a></li>
+                        <li><a asp-controller="Product" asp-action="Index" asp-route-category="Women">Дамски аромати</a></li>
+                        <li><a asp-controller="Product" asp-action="Index" asp-route-category="Unisex">Унисекс парфюми</a></li>
+                        <li><a asp-controller="Product" asp-action="Index" asp-route-filter="bestsellers">Бестселъри</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 3: Customer Care -->
+                <div class="col-lg-2 col-md-6 col-6">
+                    <h5 class="footer-heading">Обслужване</h5>
+                    <ul class="footer-links">
+                        <li><a href="/Cart">Количка</a></li>
+                        <li><a href="/Checkout">Поръчка</a></li>
+                        <li><a asp-controller="Home" asp-action="Privacy">Поверителност</a></li>
+                        <li><a href="#trust-values">Гаранция за автентичност</a></li>
+                        <li><a href="#newsletter">10% Отстъпка (GERCHEV10)</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 4: Contact Info -->
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="footer-heading">Контакти & Бутик</h5>
+                    <ul class="footer-links" style="line-height:2;">
+                        <li><i class="bi bi-geo-alt text-warning me-2"></i> София, България</li>
+                        <li><i class="bi bi-envelope text-warning me-2"></i> boutique@gerchevfragrance.com</li>
+                        <li><i class="bi bi-telephone text-warning me-2"></i> +359 88 123 4567</li>
+                        <li><i class="bi bi-clock text-warning me-2"></i> Пон - Съб: 10:00 - 19:30 ч.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    &copy; 2026 Gerchev Fragrance. Всички права запазени.
+                </div>
+                <div class="d-flex gap-4">
+                    <a asp-controller="Home" asp-action="Privacy" class="text-secondary text-decoration-none">Политика за поверителност</a>
+                    <a href="#" class="text-secondary text-decoration-none">Общи условия</a>
+                </div>
+            </div>
         </div>
     </footer>
 
+    <!-- Search Modal -->
+    <div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="background:var(--dark-card); border:1px solid var(--gold);">
+                <div class="modal-body p-4">
+                    <form asp-controller="Product" asp-action="Index" method="get" class="d-flex gap-2">
+                        <input type="text" name="search" class="form-control form-control-lg bg-dark text-white border-secondary"
+                               placeholder="Търсене на парфюм, марка или нотка (напр. Sauvage, Creed, Tom Ford)..." autofocus>
+                        <button type="submit" class="btn btn-gold px-4">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Newsletter Success Modal (GERCHEV10 Promo) -->
+    <div class="modal fade" id="newsletterModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-center p-4" style="background:var(--dark-card); border:1px solid var(--gold);">
+                <div style="font-size:3rem; color:var(--gold); margin-bottom:10px;">✦</div>
+                <h3 style="font-family:var(--font-serif); color:#fff; margin-bottom:10px;">Добре дошли в Gerchev Fragrance!</h3>
+                <p id="newsletterModalMessage" style="color:#ccc; font-size:0.9rem; line-height:1.6;">
+                    Вашият ексклузивен код за 10% отстъпка е:
+                </p>
+                <div class="p-3 my-3 d-flex justify-content-center align-items-center gap-3" 
+                     style="background:rgba(201,168,76,0.1); border:1px dashed var(--gold);">
+                    <span id="couponCodeDisplay" style="font-family:var(--font-display); font-size:1.8rem; letter-spacing:4px; color:var(--gold); font-weight:700;">
+                        GERCHEV10
+                    </span>
+                    <button class="btn btn-sm btn-outline-gold" id="btnCopyCoupon" onclick="copyCouponCode()">
+                        <i class="bi bi-clipboard"></i> Копирай
+                    </button>
+                </div>
+                <p style="color:#888; font-size:0.8rem;">
+                    * Кодът осигурява 10% отстъпка за поръчка през следващите 7 дни.
+                </p>
+                <div class="mt-3">
+                    <a href="/Product" class="btn btn-gold w-100">Започнете пазаруването</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Toast Notification -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+        <div id="liveToast" class="toast toast-luxury" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-dark text-white border-bottom border-secondary">
+                <span style="color:var(--gold); margin-right:8px;">✦</span>
+                <strong class="me-auto" style="font-family:var(--font-serif);">Gerchev Fragrance</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                Продуктът беше добавен в количката!
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        // Global Add to Cart AJAX handler
+        function addToCart(productId, quantity = 1) {
+            $.ajax({
+                url: '/Cart/Add',
+                type: 'POST',
+                data: { id: productId, quantity: quantity },
+                success: function (res) {
+                    if (res.success) {
+                        $('#navCartCount').text(res.totalItems);
+                        $('#toastMessage').html('<i class="bi bi-check2-circle text-warning me-2"></i>' + res.message);
+                        var toast = new bootstrap.Toast(document.getElementById('liveToast'));
+                        toast.show();
+                    }
+                },
+                error: function () {
+                    window.location.href = '/Cart';
+                }
+            });
+        }
+
+        // Copy coupon code helper
+        function copyCouponCode() {
+            var code = document.getElementById('couponCodeDisplay').innerText.trim();
+            navigator.clipboard.writeText(code).then(function () {
+                var btn = document.getElementById('btnCopyCoupon');
+                btn.innerHTML = '<i class="bi bi-check2"></i> Копиран!';
+                setTimeout(function () {
+                    btn.innerHTML = '<i class="bi bi-clipboard"></i> Копирай';
+                }, 2000);
+            });
+        }
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

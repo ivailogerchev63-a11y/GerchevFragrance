@@ -1,104 +1,682 @@
-﻿@model IEnumerable<MVC.Intro.Models.Product>
+@model MVC.Intro.Models.HomeViewModel
 @{
-    ViewData["Title"] = "Начало";
+    ViewData["Title"] = "Луксозна Селекция Дизайнерски & Нишови Парфюми";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!-- HERO -->
-<section style="min-height: 90vh; display:flex; align-items:center; justify-content:center;
-    background: radial-gradient(ellipse at 50% 60%, #1a1508 0%, #0d0d0d 70%);
-    position:relative; overflow:hidden;">
-    <div style="position:absolute; inset:0; background:
-        url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><circle cx=%22100%22 cy=%22100%22 r=%2280%22 fill=%22none%22 stroke=%22%23C9A84C%22 stroke-width=%220.3%22 opacity=%220.15%22/></svg>')
-        repeat; opacity:0.4;"></div>
-    <div class="container text-center" style="position:relative; z-index:2;">
-        <p style="color:#C9A84C; letter-spacing:6px; text-transform:uppercase; font-size:0.75rem; margin-bottom:20px;">
-            Maison Gerchev — Луксозни Аромати
-        </p>
-        <h1 style="font-family:'Playfair Display',serif; font-size:clamp(2.8rem,7vw,5.5rem);
-            color:#f0ead6; line-height:1.1; margin-bottom:24px;">
-            Изкуството<br><em style="color:#C9A84C;">на Аромата</em>
-        </h1>
-        <p style="color:#999; max-width:480px; margin:0 auto 40px; font-size:1rem; line-height:1.8;">
-            Открийте колекцията ни от изискани парфюми,
-            вдъхновени от красотата и елегантността.
-        </p>
-        <div class="d-flex gap-3 justify-content-center flex-wrap">
-            <a asp-controller="Product" asp-action="Index" class="btn btn-gold" style="padding:14px 40px; font-size:0.8rem;">
-                Разгледай Колекцията
+<style>
+    /* Hero Section Styles */
+    .hero-luxury {
+        min-height: 92vh;
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: radial-gradient(ellipse at 65% 50%, #1e1708 0%, #0d0c09 45%, #080808 85%);
+        overflow: hidden;
+        padding: 60px 0;
+    }
+
+    .hero-glow {
+        position: absolute;
+        top: 30%;
+        right: 15%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(201, 168, 76, 0.22) 0%, rgba(201, 168, 76, 0.05) 45%, transparent 70%);
+        filter: blur(50px);
+        pointer-events: none;
+        animation: pulseGlow 6s ease-in-out infinite alternate;
+    }
+
+    .hero-badge-tag {
+        display: inline-block;
+        color: var(--gold);
+        letter-spacing: 5px;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 22px;
+        border-left: 2px solid var(--gold);
+        padding-left: 12px;
+    }
+
+    .hero-title {
+        font-family: var(--font-serif);
+        font-size: clamp(2.8rem, 5.5vw, 4.8rem);
+        color: var(--text-light);
+        line-height: 1.12;
+        margin-bottom: 24px;
+        font-weight: 600;
+    }
+
+    .hero-title em {
+        font-style: italic;
+        color: var(--gold);
+        font-weight: 400;
+    }
+
+    .hero-desc {
+        color: #aaa;
+        font-size: 1.05rem;
+        line-height: 1.85;
+        max-width: 540px;
+        margin-bottom: 40px;
+    }
+
+    .hero-image-container {
+        position: relative;
+        text-align: center;
+    }
+
+    .hero-bottle-img {
+        max-height: 520px;
+        width: auto;
+        max-width: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 25px 45px rgba(0,0,0,0.85)) drop-shadow(0 0 40px rgba(201,168,76,0.3));
+        animation: floatBottle 6s ease-in-out infinite;
+        transition: transform 0.4s ease;
+    }
+
+    /* Floating Bottle Animation */
+    @@keyframes floatBottle {
+        0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+        }
+        50% {
+            transform: translateY(-16px) rotate(1deg);
+        }
+    }
+
+    @@keyframes pulseGlow {
+        0% { transform: scale(0.9); opacity: 0.6; }
+        100% { transform: scale(1.15); opacity: 1; }
+    }
+
+    /* Section Headers */
+    .section-eyebrow {
+        color: var(--gold);
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .section-headline {
+        font-family: var(--font-serif);
+        font-size: clamp(2rem, 3.5vw, 2.8rem);
+        color: var(--text-light);
+        margin-bottom: 12px;
+    }
+
+    /* Category Cards */
+    .category-card {
+        position: relative;
+        height: 380px;
+        overflow: hidden;
+        border: 1px solid var(--dark-border);
+        transition: var(--transition-smooth);
+        text-decoration: none;
+        display: block;
+    }
+
+    .category-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        filter: brightness(0.7);
+    }
+
+    .category-card:hover img {
+        transform: scale(1.08);
+        filter: brightness(0.85);
+    }
+
+    .category-card:hover {
+        border-color: var(--gold);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.7), 0 0 20px rgba(201,168,76,0.2);
+    }
+
+    .category-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(8,8,8,0.92) 0%, rgba(8,8,8,0.3) 60%, transparent 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 30px;
+    }
+
+    .category-title {
+        font-family: var(--font-display);
+        color: #fff;
+        font-size: 1.25rem;
+        letter-spacing: 2.5px;
+        margin-bottom: 6px;
+    }
+
+    .category-subtitle {
+        color: #aaa;
+        font-size: 0.8rem;
+        margin-bottom: 14px;
+        line-height: 1.4;
+    }
+
+    .category-link-text {
+        color: var(--gold);
+        font-size: 0.75rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: transform 0.3s;
+    }
+
+    .category-card:hover .category-link-text {
+        transform: translateX(6px);
+        color: var(--gold-light);
+    }
+
+    /* Featured Fragrance Spotlight */
+    .spotlight-box {
+        background: linear-gradient(135deg, #16140f 0%, #0c0b08 100%);
+        border: 1px solid rgba(201, 168, 76, 0.35);
+        padding: 60px 50px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .spotlight-box::before {
+        content: '';
+        position: absolute;
+        top: -150px;
+        left: -150px;
+        width: 350px;
+        height: 350px;
+        background: radial-gradient(circle, rgba(201,168,76,0.18), transparent 70%);
+        pointer-events: none;
+    }
+
+    .note-pill {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(201,168,76,0.3);
+        color: #d6cfbe;
+        font-size: 0.76rem;
+        padding: 6px 14px;
+        border-radius: 0;
+        display: inline-block;
+        margin: 0 6px 8px 0;
+    }
+
+    /* Trust Pillars */
+    .trust-card {
+        background: var(--dark-card);
+        border: 1px solid var(--dark-border);
+        padding: 40px 30px;
+        text-align: center;
+        height: 100%;
+        transition: var(--transition-smooth);
+    }
+
+    .trust-card:hover {
+        border-color: var(--gold);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .trust-icon {
+        font-size: 2.2rem;
+        color: var(--gold);
+        margin-bottom: 20px;
+        display: inline-block;
+    }
+
+    .trust-title {
+        font-family: var(--font-serif);
+        font-size: 1.2rem;
+        color: #f0ead6;
+        margin-bottom: 12px;
+    }
+
+    .trust-desc {
+        color: #888;
+        font-size: 0.85rem;
+        line-height: 1.7;
+    }
+
+    /* Newsletter Box */
+    .newsletter-section {
+        background: radial-gradient(circle at center, #18140a 0%, #080808 80%);
+        border: 1px solid var(--dark-border);
+        border-left: none;
+        border-right: none;
+        padding: 90px 0;
+        position: relative;
+    }
+</style>
+
+<!-- 1. LUXURY HERO SECTION -->
+<section class="hero-luxury">
+    <div class="hero-glow"></div>
+    <div class="container position-relative" style="z-index: 2;">
+        <div class="row align-items-center g-5">
+            <!-- Left: Headline & Actions -->
+            <div class="col-lg-7">
+                <span class="hero-badge-tag">Maison Gerchev — Висша Парфюмерия</span>
+                <h1 class="hero-title">
+                    Изкуството<br>
+                    <em>на Неповторимия</em> Аромат
+                </h1>
+                <p class="hero-desc">
+                    Потопете се в ексклузивната селекция от световно признати дизайнерски и нишови парфюми.
+                    Всеки флакон е шедьовър с неподражаем характер, изискани съставки и дълготрайно присъствие.
+                </p>
+                <div class="d-flex gap-3 flex-wrap align-items-center">
+                    <a asp-controller="Product" asp-action="Index" class="btn btn-gold">
+                        Разгледай Колекцията <i class="bi bi-arrow-right"></i>
+                    </a>
+                    <a href="#bestsellers" class="btn btn-outline-gold">
+                        Бестселъри <i class="bi bi-star"></i>
+                    </a>
+                </div>
+
+                <div class="d-flex gap-4 mt-5 pt-4 border-top border-secondary border-opacity-25" style="color:#777; font-size:0.8rem; letter-spacing:1px;">
+                    <div><span style="color:var(--gold); font-weight:700;">100%</span> ОРИГИНАЛНИ</div>
+                    <div><span style="color:var(--gold); font-weight:700;">ЕКСПРЕСНА</span> ДОСТАВКА</div>
+                    <div><span style="color:var(--gold); font-weight:700;">GERCHEV10</span> 10% ОТСТЪПКА</div>
+                </div>
+            </div>
+
+            <!-- Right: Hero Perfume Visual Presentation -->
+            <div class="col-lg-5">
+                <div class="hero-image-container">
+                    <img src="/images/images.jpg" 
+                         alt="Dior Sauvage Elixir — Gerchev Fragrance" 
+                         class="hero-bottle-img"
+                         onerror="this.src='/images/Gemini_Generated_Image_pmsttypmsttypmst.jpg'">
+                    <div class="mt-3 text-center">
+                        <div style="color:var(--gold); font-size:0.75rem; letter-spacing:3px; text-transform:uppercase;">
+                            Dior · Sauvage Elixir
+                        </div>
+                        <div style="color:#888; font-size:0.78rem;">
+                            Parfum Extract · 50ml · 219.99 лв.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3. BESTSELLERS SECTION -->
+<section id="bestsellers" style="padding: 100px 0; background: var(--dark-base);">
+    <div class="container">
+        <div class="text-center mb-5">
+            <p class="section-eyebrow">— Предпочитани от нашите клиенти —</p>
+            <h2 class="section-headline">Бестселъри</h2>
+            <hr class="divider-gold" style="width: 80px;">
+            <p style="color:#888; max-width:550px; margin:0 auto; font-size:0.92rem;">
+                Открийте най-търсените и високо оценявани аромати, определящи съвременните стандарти за лукс.
+            </p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            @foreach (var product in Model.Bestsellers)
+            {
+                <div class="col-lg-3 col-md-6">
+                    <div class="product-card">
+                        <div class="product-image-wrap">
+                            <span class="badge-bestseller">✦ БЕСТСЕЛЪР</span>
+                            @if (product.HasDiscount)
+                            {
+                                <span class="badge-discount">-@product.DiscountPercentage%</span>
+                            }
+                            <img src="@product.ImageUrl" alt="@product.Name" onerror="this.src='/images/images.jpg'">
+
+                            <div class="card-actions-hover">
+                                <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id" 
+                                   class="btn btn-outline-gold btn-sm flex-grow-1" style="font-size:0.7rem; padding:8px 12px;">
+                                    Преглед
+                                </a>
+                                <button type="button" class="btn btn-gold btn-sm" onclick="addToCart('@product.Id')" 
+                                        title="Добави в количката" style="padding:8px 14px;">
+                                    <i class="bi bi-bag-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="product-body">
+                            <div class="product-brand">@product.Brand</div>
+                            <h3 class="product-title">
+                                <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id" 
+                                   style="color:inherit; text-decoration:none;">
+                                    @product.Name
+                                </a>
+                            </h3>
+                            <div class="product-meta">
+                                <span>@product.Concentration</span>
+                                <span>·</span>
+                                <span>@product.Size</span>
+                            </div>
+
+                            <div class="product-price-row">
+                                <span class="current-price">@product.Price.ToString("F2") лв.</span>
+                                @if (product.HasDiscount)
+                                {
+                                    <span class="original-price">@product.OriginalPrice!.Value.ToString("F2") лв.</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="text-center mt-5">
+            <a asp-controller="Product" asp-action="Index" class="btn btn-outline-gold">
+                Виж Всички Аромати <i class="bi bi-chevron-right"></i>
             </a>
         </div>
     </div>
 </section>
 
-<!-- FEATURED -->
-@if (Model != null && Model.Any())
+<!-- 4. FEATURED FRAGRANCE SPOTLIGHT -->
+@if (Model.FeaturedFragrance != null)
 {
-    <section style="padding: 100px 0;">
+    var feat = Model.FeaturedFragrance;
+    <section style="padding: 100px 0; background: #0c0b09; border-top:1px solid var(--dark-border); border-bottom:1px solid var(--dark-border);">
         <div class="container">
-            <div class="text-center mb-5">
-                <p style="color:#C9A84C; letter-spacing:5px; text-transform:uppercase; font-size:0.72rem;">
-                    — Избрано —
-                </p>
-                <h2 style="font-family:'Playfair Display',serif; font-size:2.5rem; color:#f0ead6;">
-                    Препоръчани Парфюми
-                </h2>
-                <hr class="divider-gold" style="width:100px; margin:20px auto;">
-            </div>
-            <div class="row g-4 justify-content-center">
-                @foreach (var product in Model)
-                {
-                    var basePrice = product.Sizes.Where(s => s.IsAvailable).OrderBy(s => s.Price).FirstOrDefault()?.Price ?? product.Price;
-                    <div class="col-md-4">
-                        <div class="product-card">
-                            <div style="overflow:hidden;">
-                                <img src="@product.ImageUrl" alt="@product.Name"
-                                     onerror="this.src='/images/images.jpg'">
-                            </div>
-                            <div class="product-card-body">
-                                <div class="product-brand">@product.Brand</div>
-                                <div class="product-name">@product.Name</div>
-                                <div class="product-meta">
-                                    @product.Concentration · @product.Size
+            <div class="spotlight-box">
+                <div class="row align-items-center g-5">
+                    <!-- Perfume Image Presentation -->
+                    <div class="col-lg-5 text-center">
+                        <div style="position:relative; display:inline-block;">
+                            <img src="@feat.ImageUrl" alt="@feat.Name" 
+                                 style="max-height:460px; max-width:100%; object-fit:contain; filter: drop-shadow(0 20px 35px rgba(0,0,0,0.9));"
+                                 onerror="this.src='/images/images.jpg'">
+                        </div>
+                    </div>
+
+                    <!-- Perfume Details & Olfactory Breakdown -->
+                    <div class="col-lg-7">
+                        <span style="color:var(--gold); letter-spacing:4px; text-transform:uppercase; font-size:0.75rem; font-weight:600;">
+                            — Специален Избор на Месеца —
+                        </span>
+                        <div style="color:#aaa; letter-spacing:2px; font-size:0.85rem; text-transform:uppercase; margin-top:6px;">
+                            @feat.Brand
+                        </div>
+                        <h2 style="font-family:var(--font-serif); font-size:clamp(2.2rem, 4vw, 3.2rem); color:#f0ead6; margin:8px 0 16px;">
+                            @feat.Name
+                        </h2>
+
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <span class="badge-concentration" style="border-color:var(--gold); color:var(--gold); padding:4px 12px; font-size:0.75rem;">
+                                @feat.Concentration
+                            </span>
+                            <span style="color:#888; font-size:0.85rem;">Флакон: @feat.Size</span>
+                            <span style="color:#6dbf67; font-size:0.85rem;">● В наличност</span>
+                        </div>
+
+                        <p style="color:#bbb; font-size:0.95rem; line-height:1.85; margin-bottom:24px;">
+                            @feat.Description
+                        </p>
+
+                        <!-- Verified Notes Breakdown -->
+                        @if (!string.IsNullOrEmpty(feat.Notes))
+                        {
+                            <div class="mb-4">
+                                <div style="color:var(--gold); font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; font-weight:600;">
+                                    Олфактивна Пирамида:
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center mt-3">
-                                    <span class="product-price">от @Money.Eur(basePrice)</span>
-                                    <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id"
-                                       class="btn btn-outline-gold btn-sm">Детайли</a>
+                                <div>
+                                    @foreach (var note in feat.Notes.Split('|'))
+                                    {
+                                        <span class="note-pill">@note.Trim()</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Price & Action -->
+                        <div class="d-flex align-items-baseline gap-3 mb-4">
+                            <span style="font-family:var(--font-serif); font-size:2.3rem; color:var(--gold); font-weight:700;">
+                                @feat.Price.ToString("F2") лв.
+                            </span>
+                            @if (feat.HasDiscount)
+                            {
+                                <span style="color:#777; text-decoration:line-through; font-size:1.1rem;">
+                                    @feat.OriginalPrice!.Value.ToString("F2") лв.
+                                </span>
+                                <span class="badge bg-danger" style="font-size:0.75rem;">-@feat.DiscountPercentage%</span>
+                            }
+                        </div>
+
+                        <div class="d-flex gap-3 flex-wrap">
+                            <a asp-controller="Product" asp-action="Details" asp-route-id="@feat.Id" class="btn btn-outline-gold">
+                                Детайли за Аромата
+                            </a>
+                            <button type="button" class="btn btn-gold" onclick="addToCart('@feat.Id')">
+                                <i class="bi bi-bag-plus"></i> Добави в Количката
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+<!-- 5. EXPLORE OUR COLLECTION (CATEGORIES) -->
+<section style="padding: 100px 0; background: var(--dark-base);">
+    <div class="container">
+        <div class="text-center mb-5">
+            <p class="section-eyebrow">— Открийте своя ароматен подпис —</p>
+            <h2 class="section-headline">Разгледайте Колекциите</h2>
+            <hr class="divider-gold" style="width: 80px;">
+        </div>
+
+        <div class="row g-4">
+            @foreach (var cat in Model.Categories)
+            {
+                <div class="col-lg-4 col-md-6">
+                    <a href="@cat.Url" class="category-card">
+                        <img src="@cat.ImageUrl" alt="@cat.Title" onerror="this.src='/images/images.jpg'">
+                        <div class="category-overlay">
+                            <h3 class="category-title">@cat.Title</h3>
+                            <p class="category-subtitle">@cat.Subtitle</p>
+                            <span class="category-link-text">
+                                Разгледай (@cat.ProductCount) <i class="bi bi-arrow-right"></i>
+                            </span>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- 6. SPECIAL OFFERS -->
+@if (Model.SpecialOffers.Any())
+{
+    <section style="padding: 90px 0; background: #0e0d0b; border-top:1px solid var(--dark-border);">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-5">
+                <div>
+                    <p class="section-eyebrow">— Ексклузивни оферти —</p>
+                    <h2 class="section-headline" style="margin-bottom:0;">Специални Предложения</h2>
+                </div>
+                <div class="text-end">
+                    <span style="color:#aaa; font-size:0.85rem;">Ограничени промоционални наличности</span>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                @foreach (var offer in Model.SpecialOffers)
+                {
+                    <div class="col-lg-3 col-md-6">
+                        <div class="product-card">
+                            <div class="product-image-wrap">
+                                <span class="badge-discount">-@offer.DiscountPercentage% СПЕСТЯВАТЕ</span>
+                                <img src="@offer.ImageUrl" alt="@offer.Name" onerror="this.src='/images/images.jpg'">
+
+                                <div class="card-actions-hover">
+                                    <a asp-controller="Product" asp-action="Details" asp-route-id="@offer.Id" 
+                                       class="btn btn-outline-gold btn-sm flex-grow-1" style="font-size:0.7rem; padding:8px 12px;">
+                                        Преглед
+                                    </a>
+                                    <button type="button" class="btn btn-gold btn-sm" onclick="addToCart('@offer.Id')" 
+                                            title="Добави в количката" style="padding:8px 14px;">
+                                        <i class="bi bi-bag-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="product-body">
+                                <div class="product-brand">@offer.Brand</div>
+                                <h3 class="product-title">
+                                    <a asp-controller="Product" asp-action="Details" asp-route-id="@offer.Id" style="color:inherit; text-decoration:none;">
+                                        @offer.Name
+                                    </a>
+                                </h3>
+                                <div class="product-meta">
+                                    <span>@offer.Concentration · @offer.Size</span>
+                                </div>
+
+                                <div class="product-price-row">
+                                    <span class="current-price">@offer.Price.ToString("F2") лв.</span>
+                                    <span class="original-price">@offer.OriginalPrice!.Value.ToString("F2") лв.</span>
+                                </div>
+                                <div style="color:#85e89d; font-size:0.75rem; margin-top:6px;">
+                                    Спестявате @offer.SavingsAmount.ToString("F2") лв.
                                 </div>
                             </div>
                         </div>
                     </div>
                 }
             </div>
-            <div class="text-center mt-5">
-                <a asp-controller="Product" asp-action="Index" class="btn btn-gold">
-                    Виж Всички Парфюми
-                </a>
-            </div>
         </div>
     </section>
 }
 
-<!-- VALUES -->
-<section style="padding:80px 0; background:#111; border-top:1px solid #1e1e1e;">
+<!-- 8. TRUST AND CUSTOMER EXPERIENCE PILLARS -->
+<section id="trust-values" style="padding: 90px 0; background: var(--dark-base);">
     <div class="container">
-        <div class="row g-4 text-center">
-            <div class="col-md-4">
-                <div style="font-size:2rem; color:#C9A84C; margin-bottom:16px;">✦</div>
-                <h5 style="font-family:'Playfair Display',serif; color:#f0ead6;">Автентичност</h5>
-                <p style="color:#666; font-size:0.88rem;">Всеки аромат е създаден с внимание към детайла и страст към съвършенството.</p>
+        <div class="text-center mb-5">
+            <p class="section-eyebrow">— Гаранция за луксозно пазаруване —</p>
+            <h2 class="section-headline">Защо да изберете Gerchev Fragrance</h2>
+            <hr class="divider-gold" style="width: 80px;">
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="trust-card">
+                    <div class="trust-icon"><i class="bi bi-patch-check"></i></div>
+                    <h3 class="trust-title">100% Автентичност</h3>
+                    <p class="trust-desc">
+                        Всеки парфюм в бутика ни е с гарантиран оригинален произход, директно от официалните дистрибутори на марките.
+                    </p>
+                </div>
             </div>
-            <div class="col-md-4">
-                <div style="font-size:2rem; color:#C9A84C; margin-bottom:16px;">◈</div>
-                <h5 style="font-family:'Playfair Display',serif; color:#f0ead6;">Качество</h5>
-                <p style="color:#666; font-size:0.88rem;">Използваме само най-висококачествени съставки от цял свят.</p>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="trust-card">
+                    <div class="trust-icon"><i class="bi bi-box-seam"></i></div>
+                    <h3 class="trust-title">Луксозна Опаковка</h3>
+                    <p class="trust-desc">
+                        Всяка поръчка се опакова с внимание и елегантност, подготвена за незабравимо unboxing изживяване.
+                    </p>
+                </div>
             </div>
-            <div class="col-md-4">
-                <div style="font-size:2rem; color:#C9A84C; margin-bottom:16px;">❋</div>
-                <h5 style="font-family:'Playfair Display',serif; color:#f0ead6;">Елегантност</h5>
-                <p style="color:#666; font-size:0.88rem;">Всяка бутилка е произведение на изкуството, достойно за вашата колекция.</p>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="trust-card">
+                    <div class="trust-icon"><i class="bi bi-shield-lock"></i></div>
+                    <h3 class="trust-title">Сигурна Доставка</h3>
+                    <p class="trust-desc">
+                        Бърза доставка с опция за преглед преди плащане (наложен платеж) и застраховка на всяка пратка.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="trust-card">
+                    <div class="trust-icon"><i class="bi bi-gem"></i></div>
+                    <h3 class="trust-title">Експертен Съвет</h3>
+                    <p class="trust-desc">
+                        Персонално съдействие от експерти парфюмеристи при избора на вашия личен ароматен почерк.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
 </section>
+
+<!-- 9. NEWSLETTER SECTION WITH GERCHEV10 FIXED CODE -->
+<section id="newsletter" class="newsletter-section">
+    <div class="container text-center">
+        <div style="max-width: 680px; margin: 0 auto;">
+            <div style="color:var(--gold); font-size:1.6rem; margin-bottom:12px;">✦</div>
+            <p class="section-eyebrow">Ексклузивни привилегии</p>
+            <h2 style="font-family:var(--font-serif); font-size:clamp(2rem, 3.8vw, 3rem); color:#f0ead6; margin-bottom:18px;">
+                Join the Gerchev Fragrance experience
+            </h2>
+            <p style="color:#aaa; font-size:0.95rem; line-height:1.8; margin-bottom:32px;">
+                Абонирайте се за нашия VIP бюлетин и получете моментално вашия персонален код за 
+                <strong style="color:var(--gold);">10% отстъпка: GERCHEV10</strong>, валиден за 7 дни от регистрацията.
+            </p>
+
+            <form id="newsletterForm" class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                <input type="email" id="newsletterEmail" class="form-control form-control-lg bg-dark text-white border-secondary"
+                       placeholder="Въведете вашия имейл адрес..." required
+                       style="max-width: 420px; font-size:0.9rem; padding:14px 18px; border-radius:0;">
+                <button type="submit" class="btn btn-gold" style="white-space:nowrap; padding:14px 32px;">
+                    Абонирай се
+                </button>
+            </form>
+
+            <div id="newsletterFeedback" class="mt-3" style="display:none; font-size:0.88rem;"></div>
+
+            <p style="color:#666; font-size:0.75rem; margin-top:20px;">
+                Всеки имейл може да се възползва от отстъпката за добре дошли само веднъж. Няма спам, отказването е лесно.
+            </p>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Newsletter subscription AJAX handler
+        $('#newsletterForm').on('submit', function (e) {
+            e.preventDefault();
+            var email = $('#newsletterEmail').val().trim();
+            var $feedback = $('#newsletterFeedback');
+
+            if (!email) return;
+
+            $.ajax({
+                url: '/Newsletter/Subscribe',
+                type: 'POST',
+                data: { email: email },
+                success: function (res) {
+                    if (res.success) {
+                        $('#newsletterModalMessage').text(res.message);
+                        $('#couponCodeDisplay').text(res.code);
+                        var modal = new bootstrap.Modal(document.getElementById('newsletterModal'));
+                        modal.show();
+                        $('#newsletterEmail').val('');
+                        $feedback.html('<span class="text-success"><i class="bi bi-check-circle"></i> ' + res.message + '</span>').show();
+                    } else {
+                        $feedback.html('<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> ' + res.message + '</span>').show();
+                    }
+                },
+                error: function () {
+                    $feedback.html('<span class="text-danger">Възникна временна грешка. Моля, опитайте отново.</span>').show();
+                }
+            });
+        });
+    </script>
+}

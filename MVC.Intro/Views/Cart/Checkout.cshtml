@@ -28,27 +28,20 @@
                         <div style="display:flex; justify-content:space-between; align-items:center;
                             padding:10px 0; border-bottom:1px solid #1e1e1e;">
                             <div>
-                                <div style="color:#f0ead6; font-size:0.88rem;">@item.ProductName</div>
+                                <div style="color:#f0ead6; font-size:0.88rem;">@item.Name</div>
                                 <div style="color:#666; font-size:0.75rem;">
-                                    @item.Concentration · @item.Ml ml · бр. @item.Quantity
+                                    @item.Concentration &middot; @item.Size &middot; бр. @item.Quantity
                                 </div>
                             </div>
                             <span style="color:#C9A84C; font-size:0.9rem; white-space:nowrap;">
-                                @Money.Eur(item.LineTotal)
+                                @item.Subtotal.ToString("F2") лв.
                             </span>
-                        </div>
-                    }
-                    @if (Model.DiscountPercent > 0)
-                    {
-                        <div style="display:flex; justify-content:space-between; margin-top:16px; color:#6dbf67; font-size:0.85rem;">
-                            <span>Отстъпка (@Model.CouponCode · @Model.DiscountPercent%)</span>
-                            <span>−@Money.Eur(Model.DiscountAmount)</span>
                         </div>
                     }
                     <div style="display:flex; justify-content:space-between; margin-top:20px;">
                         <span style="font-family:'Playfair Display',serif; color:#f0ead6;">Общо</span>
                         <span style="font-family:'Playfair Display',serif; color:#C9A84C; font-size:1.2rem;">
-                            @Money.Eur(Model.Total)
+                            @Model.Total.ToString("F2") лв.
                         </span>
                     </div>
                 </div>

@@ -61,15 +61,15 @@
 
                     <div class="row g-3 mb-4">
                         <div class="col-6">
-                            <label asp-for="Price">Основна цена (EUR)</label>
+                            <label asp-for="Price"></label>
                             <div style="position:relative;">
-                                <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%);
-                                    color:#666; font-size:0.85rem; pointer-events:none;">€</span>
                                 <input asp-for="Price" class="form-control" placeholder="0.00"
-                                       style="padding-left:28px;" />
+                                       style="padding-right:42px;" />
+                                <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%);
+                                    color:#666; font-size:0.85rem; pointer-events:none;">лв.</span>
                             </div>
                             <span asp-validation-for="Price" style="color:#e07070; font-size:0.78rem;"></span>
-                            <small style="color:#555; font-size:0.75rem;">Цена за 100 ml (основна), в евро</small>
+                            <small style="color:#555; font-size:0.75rem;">Цена за 100 ml (основна)</small>
                         </div>
                         <div class="col-6">
                             <label asp-for="StockQuantity"></label>

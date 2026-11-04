@@ -1,0 +1,64 @@
+@model MVC.Intro.Models.Order
+@{
+    ViewData["Title"] = "Поръчката е приета";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section style="padding: 80px 0 120px; min-height: 80vh;">
+    <div class="container text-center">
+        <div style="max-width: 650px; margin: 0 auto; background: var(--dark2); border: 1px solid var(--gold); padding: 50px 30px;">
+            <div style="font-size: 3.5rem; color: var(--gold); margin-bottom: 20px;">✓</div>
+            <p style="color: var(--gold); letter-spacing: 4px; text-transform: uppercase; font-size: 0.75rem;">
+                Благодарим за вашата поръчка
+            </p>
+            <h1 style="font-family: 'Playfair Display', serif; color: #f0ead6; font-size: 2.4rem; margin-bottom: 15px;">
+                Поръчката е потвърдена
+            </h1>
+            <p style="color: #bbb; font-size: 1rem; margin-bottom: 30px;">
+                Номер на поръчка: <strong style="color: #fff; letter-spacing: 1px;">@Model.OrderNumber</strong>
+            </p>
+
+            <div class="text-start p-4 mb-4" style="background: var(--dark); border: 1px solid #333;">
+                <div class="row g-2" style="font-size: 0.88rem; color: #aaa;">
+                    <div class="col-sm-4">Получател:</div>
+                    <div class="col-sm-8 text-white">@Model.CustomerName</div>
+
+                    <div class="col-sm-4">Имейл:</div>
+                    <div class="col-sm-8 text-white">@Model.CustomerEmail</div>
+
+                    <div class="col-sm-4">Телефон:</div>
+                    <div class="col-sm-8 text-white">@Model.CustomerPhone</div>
+
+                    <div class="col-sm-4">Адрес за доставка:</div>
+                    <div class="col-sm-8 text-white">@Model.ShippingAddress, @Model.City</div>
+
+                    @if (!string.IsNullOrEmpty(Model.AppliedCouponCode))
+                    {
+                        <div class="col-sm-4">Приложена отстъпка:</div>
+                        <div class="col-sm-8" style="color: #85e89d;">
+                            Код <strong>@Model.AppliedCouponCode</strong> (-@Model.DiscountAmount.ToString("F2") лв.)
+                        </div>
+                    }
+
+                    <div class="col-sm-4 pt-2 border-top border-secondary">Крайна сума:</div>
+                    <div class="col-sm-8 pt-2 border-top border-secondary" style="color: var(--gold); font-size: 1.15rem; font-weight: 700;">
+                        @Model.TotalAmount.ToString("F2") лв. (Наложен платеж)
+                    </div>
+                </div>
+            </div>
+
+            <p style="color: #777; font-size: 0.82rem; margin-bottom: 30px;">
+                Изпратихме потвърждение на посочения имейл адрес. Наш представител ще се свърже с вас при необходимост от допълнително уточнение.
+            </p>
+
+            <div class="d-flex justify-content-center gap-3">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-gold">
+                    Към Началото
+                </a>
+                <a asp-controller="Product" asp-action="Index" class="btn btn-gold">
+                    Продължи Пазаруването
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
