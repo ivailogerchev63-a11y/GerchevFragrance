@@ -79,14 +79,14 @@
                 <!-- Pricing -->
                 <div class="d-flex align-items-baseline gap-3 mb-4">
                     <span style="font-family:var(--font-serif); font-size:2.5rem; color:var(--gold); font-weight:700;">
-                        @Model.Price.ToString("F2") лв.
+                        @CurrencyHelper.FormatEuro(Model.Price)
                     </span>
                     @if (Model.HasDiscount)
                     {
                         <span style="color:#777; text-decoration:line-through; font-size:1.2rem;">
-                            @Model.OriginalPrice!.Value.ToString("F2") лв.
+                            @CurrencyHelper.FormatEuro(Model.OriginalPrice!.Value)
                         </span>
-                        <span class="badge bg-danger">Спестявате @Model.SavingsAmount.ToString("F2") лв.</span>
+                        <span class="badge bg-danger">Спестявате @CurrencyHelper.FormatEuro(Model.SavingsAmount)</span>
                     }
                 </div>
 
@@ -155,7 +155,7 @@
                                         <span>@p.Concentration · @p.Size</span>
                                     </div>
                                     <div class="product-price-row">
-                                        <span class="current-price">@p.Price.ToString("F2") лв.</span>
+                                        <span class="current-price">@CurrencyHelper.FormatEuro(p.Price)</span>
                                     </div>
                                 </div>
                             </div>

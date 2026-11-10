@@ -15,13 +15,20 @@ namespace MVC.Intro.Models
 
     public class CartViewModel
     {
+        public const decimal FreeShippingThreshold = 150m;
+        public const decimal StandardShippingFee = 6.00m;
+
         public List<CartItem> Items { get; set; } = new();
         public decimal Subtotal => Items.Sum(i => i.Subtotal);
         public string? AppliedCouponCode { get; set; }
         public decimal DiscountPercentage { get; set; }
         public decimal DiscountAmount => Subtotal * (DiscountPercentage / 100m);
-        public decimal Total => Math.Max(0, Subtotal - DiscountAmount);
+        public decimal ShippingFee => Subtotal >= FreeShippingThreshold ? 0m : StandardShippingFee;
+        public decimal Total => GetOrderTotal(DiscountAmount);
         public int TotalItems => Items.Sum(i => i.Quantity);
+
+        public decimal GetOrderTotal(decimal discountAmount) =>
+            Math.Max(0, Subtotal - discountAmount) + ShippingFee;
     }
 
     public class CheckoutViewModel

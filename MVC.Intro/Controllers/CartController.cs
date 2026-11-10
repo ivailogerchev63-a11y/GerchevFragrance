@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using MVC.Intro.Helpers;
 using MVC.Intro.Services;
 
 namespace MVC.Intro.Controllers
@@ -30,8 +31,8 @@ namespace MVC.Intro.Controllers
                 {
                     success,
                     totalItems = cart.TotalItems,
-                    subtotal = cart.Subtotal.ToString("F2"),
-                    total = cart.Total.ToString("F2"),
+                    subtotal = CurrencyHelper.FormatEuro(cart.Subtotal),
+                    total = CurrencyHelper.FormatEuro(cart.Total),
                     message = success ? "Продуктът беше добавен в количката!" : "Възникна грешка при добавянето."
                 });
             }
@@ -51,9 +52,9 @@ namespace MVC.Intro.Controllers
                 {
                     success = true,
                     totalItems = cart.TotalItems,
-                    subtotal = cart.Subtotal.ToString("F2"),
-                    discount = cart.DiscountAmount.ToString("F2"),
-                    total = cart.Total.ToString("F2")
+                    subtotal = CurrencyHelper.FormatEuro(cart.Subtotal),
+                    discount = CurrencyHelper.FormatEuro(cart.DiscountAmount),
+                    total = CurrencyHelper.FormatEuro(cart.Total)
                 });
             }
 
@@ -72,8 +73,8 @@ namespace MVC.Intro.Controllers
                 {
                     success = true,
                     totalItems = cart.TotalItems,
-                    subtotal = cart.Subtotal.ToString("F2"),
-                    total = cart.Total.ToString("F2")
+                    subtotal = CurrencyHelper.FormatEuro(cart.Subtotal),
+                    total = CurrencyHelper.FormatEuro(cart.Total)
                 });
             }
 
@@ -93,8 +94,8 @@ namespace MVC.Intro.Controllers
                     success = result.success,
                     message = result.message,
                     discountPercent = result.discountPercent,
-                    discountAmount = cart.DiscountAmount.ToString("F2"),
-                    total = cart.Total.ToString("F2")
+                    discountAmount = CurrencyHelper.FormatEuro(cart.DiscountAmount),
+                    total = CurrencyHelper.FormatEuro(cart.Total)
                 });
             }
 
@@ -116,9 +117,9 @@ namespace MVC.Intro.Controllers
             return Json(new
             {
                 totalItems = cart.TotalItems,
-                subtotal = cart.Subtotal.ToString("F2"),
-                discount = cart.DiscountAmount.ToString("F2"),
-                total = cart.Total.ToString("F2"),
+                subtotal = CurrencyHelper.FormatEuro(cart.Subtotal),
+                discount = CurrencyHelper.FormatEuro(cart.DiscountAmount),
+                total = CurrencyHelper.FormatEuro(cart.Total),
                 items = cart.Items
             });
         }

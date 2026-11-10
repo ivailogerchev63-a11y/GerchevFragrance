@@ -124,10 +124,10 @@
                                 }
 
                                 <div class="product-price-row">
-                                    <span class="current-price">@product.Price.ToString("F2") лв.</span>
+                                    <span class="current-price">@CurrencyHelper.FormatEuro(product.Price)</span>
                                     @if (product.HasDiscount)
                                     {
-                                        <span class="original-price">@product.OriginalPrice!.Value.ToString("F2") лв.</span>
+                                        <span class="original-price">@CurrencyHelper.FormatEuro(product.OriginalPrice!.Value)</span>
                                     }
                                 </div>
                             </div>

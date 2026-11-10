@@ -97,7 +97,7 @@ namespace MVC.Intro.Controllers
                 }
             }
 
-            var totalAmount = Math.Max(0, cart.Subtotal - discountAmount);
+            var totalAmount = cart.GetOrderTotal(discountAmount);
             var orderNumber = "GF-" + DateTime.UtcNow.ToString("yyyyMMdd") + "-" + Random.Shared.Next(1000, 9999);
 
             var order = new Order

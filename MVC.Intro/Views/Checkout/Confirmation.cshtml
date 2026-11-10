@@ -36,13 +36,13 @@
                     {
                         <div class="col-sm-4">Приложена отстъпка:</div>
                         <div class="col-sm-8" style="color: #85e89d;">
-                            Код <strong>@Model.AppliedCouponCode</strong> (-@Model.DiscountAmount.ToString("F2") лв.)
+                            Код <strong>@Model.AppliedCouponCode</strong> (-@CurrencyHelper.FormatEuro(Model.DiscountAmount))
                         </div>
                     }
 
                     <div class="col-sm-4 pt-2 border-top border-secondary">Крайна сума:</div>
                     <div class="col-sm-8 pt-2 border-top border-secondary" style="color: var(--gold); font-size: 1.15rem; font-weight: 700;">
-                        @Model.TotalAmount.ToString("F2") лв. (Наложен платеж)
+                        @CurrencyHelper.FormatEuro(Model.TotalAmount) (Наложен платеж)
                     </div>
                 </div>
             </div>
