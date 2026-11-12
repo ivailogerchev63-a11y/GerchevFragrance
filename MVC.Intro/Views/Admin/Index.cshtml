@@ -1,0 +1,164 @@
+@model AdminDashboardViewModel
+@{
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+    ViewData["Title"] = "Табло";
+    ViewData["PageTitle"] = "Табло";
+}
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-label">Продукти</div>
+            <div class="stat-value">@Model.TotalProducts</div>
+            <div class="stat-sub">@Model.AvailableProducts в наличност</div>
+            <i class="bi bi-box-seam stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-label">Поръчки</div>
+            <div class="stat-value">@Model.TotalOrders</div>
+            <div class="stat-sub">Всичко</div>
+            <i class="bi bi-bag-check stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-label">Клиенти</div>
+            <div class="stat-value">@Model.TotalCustomers</div>
+            <div class="stat-sub">Регистрирани</div>
+            <i class="bi bi-people stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-label">Приходи</div>
+            <div class="stat-value" style="font-size:1.3rem;">@Model.TotalRevenue.ToString("F0") €</div>
+            <div class="stat-sub">Всичко (без отказани)</div>
+            <i class="bi bi-currency-euro stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-label">Нисък запас</div>
+            <div class="stat-value" style="@(Model.LowStockProducts > 0 ? "color:#e53e3e;" : "")">@Model.LowStockProducts</div>
+            <div class="stat-sub">≤ 3 бр. наличност</div>
+            <i class="bi bi-exclamation-triangle stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-label">Налични</div>
+            <div class="stat-value">@Model.AvailableProducts</div>
+            <div class="stat-sub">продукти в магазина</div>
+            <i class="bi bi-check2-circle stat-icon"></i>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Recent Orders -->
+    <div class="col-lg-7">
+        <div class="admin-section">
+            <div class="admin-section-header">
+                <h5><i class="bi bi-bag-check me-2"></i>Последни поръчки</h5>
+                <a asp-action="Orders" class="btn-admin-outline btn-admin-sm">Всички →</a>
+            </div>
+            @if (Model.RecentOrders.Any())
+            {
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Номер</th>
+                                <th>Клиент</th>
+                                <th>Сума</th>
+                                <th>Статус</th>
+                                <th>Дата</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model.RecentOrders)
+                            {
+                                <tr>
+                                    <td><span style="color:var(--gold);font-weight:600;font-size:0.8rem;">@order.OrderNumber</span></td>
+                                    <td style="font-size:0.82rem;">@order.CustomerName</td>
+                                    <td style="color:var(--gold);">@order.TotalAmount.ToString("F2") €</td>
+                                    <td>
+                                        @{
+                                            var badgeClass = order.Status switch {
+                                                "Потвърдена" => "badge-confirmed",
+                                                "Обработва се" => "badge-processing",
+                                                "Изпратена" => "badge-shipped",
+                                                "Доставена" => "badge-delivered",
+                                                _ => "badge-cancelled"
+                                            };
+                                        }
+                                        <span class="badge-admin @badgeClass">@order.Status</span>
+                                    </td>
+                                    <td style="color:var(--text-muted);font-size:0.78rem;">@order.OrderDate.ToString("dd.MM.yyyy")</td>
+                                    <td><a asp-action="OrderDetails" asp-route-id="@order.Id" class="btn-admin-outline btn-admin-sm">→</a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="admin-section-body" style="color:var(--text-muted);">Няма поръчки.</div>
+            }
+        </div>
+    </div>
+
+    <!-- Quick Links + Recent Activity -->
+    <div class="col-lg-5">
+        <!-- Quick Links -->
+        <div class="admin-section mb-3">
+            <div class="admin-section-header">
+                <h5><i class="bi bi-lightning me-2"></i>Бързи действия</h5>
+            </div>
+            <div class="admin-section-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="CreateProduct" class="btn-admin-gold text-center text-decoration-none d-block py-2">
+                        <i class="bi bi-plus-circle me-2"></i>Добавяне на продукт
+                    </a>
+                    <a asp-action="Discounts" class="btn-admin-outline text-center text-decoration-none d-block py-2">
+                        <i class="bi bi-percent me-2"></i>Управление отстъпки
+                    </a>
+                    <a asp-action="Collections" class="btn-admin-outline text-center text-decoration-none d-block py-2">
+                        <i class="bi bi-collection me-2"></i>Начална страница
+                    </a>
+                    <a asp-action="Orders" class="btn-admin-outline text-center text-decoration-none d-block py-2">
+                        <i class="bi bi-bag me-2"></i>Всички поръчки
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="admin-section">
+            <div class="admin-section-header">
+                <h5><i class="bi bi-journal-text me-2"></i>Последна активност</h5>
+            </div>
+            @if (Model.RecentActivity.Any())
+            {
+                <div style="max-height:300px;overflow-y:auto;">
+                    @foreach (var log in Model.RecentActivity)
+                    {
+                        <div style="padding:10px 20px;border-bottom:1px solid var(--dark-border);">
+                            <div style="font-size:0.8rem;color:var(--text-light);">@log.Description</div>
+                            <div style="font-size:0.72rem;color:var(--text-muted);">@log.CreatedAt.ToString("dd.MM.yyyy HH:mm") · @log.AdminEmail</div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="admin-section-body" style="color:var(--text-muted);">Няма записи.</div>
+            }
+        </div>
+    </div>
+</div>

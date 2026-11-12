@@ -15,9 +15,13 @@ namespace MVC.Intro.Models
         public decimal Subtotal { get; set; }
         public decimal DiscountAmount { get; set; }
         public string? AppliedCouponCode { get; set; }
+        public decimal ShippingFee { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime OrderDate { get; set; } = DateTime.UtcNow;
         public string Status { get; set; } = "Потвърдена";
+
+        /// <summary>Whether an order confirmation email has been sent</summary>
+        public bool ConfirmationEmailSent { get; set; } = false;
 
         public List<OrderItem> Items { get; set; } = new();
     }
@@ -30,6 +34,10 @@ namespace MVC.Intro.Models
         public string ProductName { get; set; } = string.Empty;
         public string? ProductBrand { get; set; }
         public string? ImageUrl { get; set; }
+
+        /// <summary>The selected bottle size, e.g. "75 ml"</summary>
+        public string? SelectedSize { get; set; }
+
         public decimal UnitPrice { get; set; }
         public int Quantity { get; set; }
         public decimal LineTotal => UnitPrice * Quantity;

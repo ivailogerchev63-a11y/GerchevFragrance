@@ -1,0 +1,107 @@
+@model AdminOrderListViewModel
+@{
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+    ViewData["Title"] = "Поръчки";
+    ViewData["PageTitle"] = "Поръчки";
+    var statuses = ViewBag.OrderStatuses as string[];
+}
+
+<!-- Filters -->
+<div class="admin-section mb-4">
+    <div class="admin-section-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label-gold">Търсене</label>
+                <input type="text" name="search" value="@Model.Search" class="form-control-dark w-100" placeholder="Номер, клиент или имейл" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-gold">Статус</label>
+                <select name="status" class="form-select-dark w-100">
+                    <option value="">Всички</option>
+                    @foreach (var s in statuses ?? Array.Empty<string>())
+                    {
+                        if (Model.Status == s) { <option value="@s" selected>@s</option> }
+                        else { <option value="@s">@s</option> }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-gold">От дата</label>
+                <input type="date" name="dateFrom" value="@Model.DateFrom" class="form-control-dark w-100" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-gold">До дата</label>
+                <input type="date" name="dateTo" value="@Model.DateTo" class="form-control-dark w-100" />
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn-admin-gold">Търсене</button>
+                <a asp-action="Orders" class="btn-admin-outline">Изчисти</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="admin-section">
+    <div class="admin-section-header">
+        <h5>Поръчки (@Model.TotalCount)</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Клиент</th>
+                    <th>Имейл</th>
+                    <th>Сума</th>
+                    <th>Статус</th>
+                    <th>Дата</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model.Orders)
+                {
+                    <tr>
+                        <td><strong style="color:var(--gold);font-size:0.82rem;">@order.OrderNumber</strong></td>
+                        <td style="font-size:0.85rem;">@order.CustomerName</td>
+                        <td style="font-size:0.8rem;color:var(--text-muted);">@order.CustomerEmail</td>
+                        <td style="color:var(--gold);white-space:nowrap;">@order.TotalAmount.ToString("F2") €</td>
+                        <td>
+                            @{
+                                var bc = order.Status switch {
+                                    "Потвърдена" => "badge-confirmed",
+                                    "Обработва се" => "badge-processing",
+                                    "Изпратена" => "badge-shipped",
+                                    "Доставена" => "badge-delivered",
+                                    _ => "badge-cancelled"
+                                };
+                            }
+                            <span class="badge-admin @bc">@order.Status</span>
+                        </td>
+                        <td style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap;">@order.OrderDate.ToString("dd.MM.yyyy HH:mm")</td>
+                        <td><a asp-action="OrderDetails" asp-route-id="@order.Id" class="btn-admin-outline btn-admin-sm">Детайли</a></td>
+                    </tr>
+                }
+                @if (!Model.Orders.Any())
+                {
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:30px;">Няма намерени поръчки.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="admin-section-body d-flex justify-content-center">
+            <div class="admin-pagination">
+                @if (Model.Page > 1) { <a asp-action="Orders" asp-route-page="@(Model.Page-1)" asp-route-search="@Model.Search" asp-route-status="@Model.Status"><i class="bi bi-chevron-left"></i></a> }
+                @for (int i = Math.Max(1, Model.Page-2); i <= Math.Min(Model.TotalPages, Model.Page+2); i++)
+                {
+                    @if (i == Model.Page) { <span class="active">@i</span> }
+                    else { <a asp-action="Orders" asp-route-page="@i" asp-route-search="@Model.Search" asp-route-status="@Model.Status">@i</a> }
+                }
+                @if (Model.Page < Model.TotalPages) { <a asp-action="Orders" asp-route-page="@(Model.Page+1)" asp-route-search="@Model.Search" asp-route-status="@Model.Status"><i class="bi bi-chevron-right"></i></a> }
+            </div>
+        </div>
+    }
+</div>

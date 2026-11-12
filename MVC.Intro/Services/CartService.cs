@@ -35,13 +35,52 @@ namespace MVC.Intro.Services
             Session.SetString(CartSessionKey, JsonSerializer.Serialize(items));
         }
 
-        public async Task<bool> AddToCartAsync(Guid productId, int quantity = 1)
+        /// <summary>
+        /// Adds a product to cart. If variantId is provided, uses that variant's price/size.
+        /// If the same product+size combination already exists, increments quantity.
+        /// </summary>
+        public async Task<bool> AddToCartAsync(Guid productId, int quantity = 1, Guid? variantId = null)
         {
-            var product = await _context.Products.FindAsync(productId);
+            var product = await _context.Products
+                .Include(p => p.Variants)
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
             if (product == null) return false;
 
+            string? selectedSize = null;
+            decimal price = product.Price;
+
+            if (variantId.HasValue && variantId != Guid.Empty)
+            {
+                var variant = product.Variants.FirstOrDefault(v => v.Id == variantId);
+                if (variant != null && variant.IsAvailable)
+                {
+                    selectedSize = $"{variant.SizeMl} ml";
+                    price = variant.Price;
+                }
+            }
+            else if (product.Variants.Any())
+            {
+                // Default to the cheapest available variant
+                var cheapest = product.Variants
+                    .Where(v => v.IsAvailable)
+                    .OrderBy(v => v.Price)
+                    .FirstOrDefault();
+                if (cheapest != null)
+                {
+                    selectedSize = $"{cheapest.SizeMl} ml";
+                    price = cheapest.Price;
+                }
+            }
+            else
+            {
+                selectedSize = product.Size;
+            }
+
             var items = GetCartItems();
-            var existing = items.FirstOrDefault(i => i.ProductId == productId);
+            var cartKey = $"{productId}|{selectedSize ?? "default"}";
+            var existing = items.FirstOrDefault(i => i.CartKey == cartKey);
+
             if (existing != null)
             {
                 existing.Quantity += quantity;
@@ -53,9 +92,9 @@ namespace MVC.Intro.Services
                     ProductId = product.Id,
                     Name = product.Name,
                     Brand = product.Brand ?? "Gerchev Fragrance",
-                    Price = product.Price,
+                    Price = price,
                     ImageUrl = product.ImageUrl,
-                    Size = product.Size,
+                    Size = selectedSize,
                     Concentration = product.Concentration,
                     Quantity = quantity
                 });
@@ -65,6 +104,24 @@ namespace MVC.Intro.Services
             return true;
         }
 
+        /// <summary>
+        /// Updates quantity for a specific cart item identified by productId + size key.
+        /// </summary>
+        public void UpdateQuantity(string cartKey, int quantity)
+        {
+            var items = GetCartItems();
+            var existing = items.FirstOrDefault(i => i.CartKey == cartKey);
+            if (existing != null)
+            {
+                if (quantity <= 0)
+                    items.Remove(existing);
+                else
+                    existing.Quantity = quantity;
+                SaveCartItems(items);
+            }
+        }
+
+        /// <summary>Legacy overload for backwards compatibility (uses ProductId only)</summary>
         public void UpdateQuantity(Guid productId, int quantity)
         {
             var items = GetCartItems();
@@ -72,21 +129,26 @@ namespace MVC.Intro.Services
             if (existing != null)
             {
                 if (quantity <= 0)
-                {
                     items.Remove(existing);
-                }
                 else
-                {
                     existing.Quantity = quantity;
-                }
                 SaveCartItems(items);
             }
         }
 
+        public void RemoveFromCart(string cartKey)
+        {
+            var items = GetCartItems();
+            items.RemoveAll(i => i.CartKey == cartKey);
+            SaveCartItems(items);
+        }
+
+        /// <summary>Legacy overload: removes first item with matching ProductId</summary>
         public void RemoveFromCart(Guid productId)
         {
             var items = GetCartItems();
-            items.RemoveAll(i => i.ProductId == productId);
+            var toRemove = items.FirstOrDefault(i => i.ProductId == productId);
+            if (toRemove != null) items.Remove(toRemove);
             SaveCartItems(items);
         }
 
@@ -109,13 +171,9 @@ namespace MVC.Intro.Services
 
             var normalizedCode = code.Trim().ToUpperInvariant();
 
-            // Validate specifically for GERCHEV10
             if (normalizedCode != "GERCHEV10")
-            {
                 return (false, "Невалиден промоционален код.", 0);
-            }
 
-            // Check if there is a valid coupon in DB
             var couponQuery = _context.DiscountCoupons.Where(c => c.Code == normalizedCode && !c.IsUsed && c.ExpiresAt > DateTime.UtcNow);
             if (!string.IsNullOrWhiteSpace(customerEmail))
             {
@@ -125,15 +183,11 @@ namespace MVC.Intro.Services
 
             var coupon = await couponQuery.OrderByDescending(c => c.CreatedAt).FirstOrDefaultAsync();
 
-            // Also allow the standard GERCHEV10 code for customers who just received it
             if (coupon == null)
             {
-                // Fallback check: check if code is GERCHEV10 and active in general
                 var anyActive = await _context.DiscountCoupons.AnyAsync(c => c.Code == normalizedCode && !c.IsUsed && c.ExpiresAt > DateTime.UtcNow);
                 if (!anyActive && !string.IsNullOrWhiteSpace(customerEmail))
-                {
                     return (false, "Този код за отстъпка вече е използван или е изтекъл.", 0);
-                }
             }
 
             Session?.SetString(CouponSessionKey, normalizedCode);
@@ -149,12 +203,7 @@ namespace MVC.Intro.Services
         {
             var items = GetCartItems();
             var couponCode = GetAppliedCoupon();
-            decimal discount = 0m;
-
-            if (!string.IsNullOrEmpty(couponCode))
-            {
-                discount = 10.00m;
-            }
+            decimal discount = string.IsNullOrEmpty(couponCode) ? 0m : 10.00m;
 
             return new CartViewModel
             {

@@ -1,0 +1,141 @@
+@model AdminProductListViewModel
+@{
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+    ViewData["Title"] = "Продукти";
+    ViewData["PageTitle"] = "Продукти";
+}
+
+<!-- Toolbar -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <form method="get" class="d-flex gap-2 flex-wrap">
+        <input type="text" name="search" value="@Model.Search" class="form-control-dark" placeholder="Търсене по név или марка…" style="width:220px;" />
+        <select name="category" class="form-select-dark" style="width:170px;">
+            <option value="">Всички категории</option>
+            @foreach (var cat in new[] { "Men", "Women", "Unisex", "Luxury Fragrances" })
+            {
+                if (Model.Category == cat) { <option value="@cat" selected>@cat</option> }
+                else { <option value="@cat">@cat</option> }
+            }
+        </select>
+        <button type="submit" class="btn-admin-gold">Търсене</button>
+        @if (!string.IsNullOrEmpty(Model.Search) || !string.IsNullOrEmpty(Model.Category))
+        {
+            <a asp-action="Products" class="btn-admin-outline">Изчисти</a>
+        }
+    </form>
+    <a asp-action="CreateProduct" class="btn-admin-gold"><i class="bi bi-plus-circle me-1"></i> Нов продукт</a>
+</div>
+
+<div class="admin-section">
+    <div class="admin-section-header">
+        <h5>Всички продукти (@Model.TotalCount)</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Снимка</th>
+                    <th>Наименование</th>
+                    <th>Марка</th>
+                    <th>Категория</th>
+                    <th>Варианти</th>
+                    <th>Цена</th>
+                    <th>Запас</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Products)
+                {
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(p.ImageUrl))
+                            {
+                                <img src="@p.ImageUrl" alt="@p.Name" class="img-preview" style="width:50px;height:50px;border-radius:2px;" />
+                            }
+                            else
+                            {
+                                <span style="color:var(--text-muted);font-size:0.75rem;">Без снимка</span>
+                            }
+                        </td>
+                        <td>
+                            <div style="font-weight:600;font-size:0.85rem;">@p.Name</div>
+                            @if (!string.IsNullOrEmpty(p.Concentration))
+                            {
+                                <div style="font-size:0.72rem;color:var(--gold);">@p.Concentration</div>
+                            }
+                        </td>
+                        <td style="font-size:0.82rem;">@p.Brand</td>
+                        <td style="font-size:0.8rem;color:var(--text-muted);">@p.Category</td>
+                        <td>
+                            <a asp-action="Variants" asp-route-productId="@p.Id" class="btn-admin-outline btn-admin-sm">
+                                @p.Variants.Count бр.
+                            </a>
+                        </td>
+                        <td style="color:var(--gold);white-space:nowrap;">
+                            @p.Price.ToString("F2") €
+                            @if (p.OriginalPrice.HasValue)
+                            {
+                                <div style="text-decoration:line-through;color:#666;font-size:0.75rem;">@p.OriginalPrice.Value.ToString("F2") €</div>
+                            }
+                        </td>
+                        <td>
+                            <span class="@(p.StockQuantity <= 0 ? "badge-admin badge-cancelled" : p.StockQuantity <= 3 ? "badge-admin badge-processing" : "badge-admin badge-confirmed")">
+                                @p.StockQuantity
+                            </span>
+                        </td>
+                        <td>
+                            @if (p.IsBestseller)
+                            {
+                                <span class="badge-admin badge-delivered me-1" style="font-size:0.65rem;">★ Best</span>
+                            }
+                            @if (p.IsFeatured)
+                            {
+                                <span class="badge-admin badge-shipped" style="font-size:0.65rem;">★ Featured</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a asp-action="EditProduct" asp-route-id="@p.Id" class="btn-admin-outline btn-admin-sm" title="Редактирай"><i class="bi bi-pencil"></i></a>
+                                <a asp-action="Variants" asp-route-productId="@p.Id" class="btn-admin-outline btn-admin-sm" title="Варианти"><i class="bi bi-layers"></i></a>
+                                <form method="post" asp-action="DeleteProduct" asp-route-id="@p.Id" style="display:inline;"
+                                      onsubmit="return confirm('Изтриване? Ако продуктът има поръчки, ще бъде само деактивиран.')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-admin-danger btn-admin-sm" title="Изтрий"><i class="bi bi-trash3"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="admin-section-body d-flex justify-content-center">
+            <div class="admin-pagination">
+                @if (Model.Page > 1)
+                {
+                    <a asp-action="Products" asp-route-page="@(Model.Page - 1)" asp-route-search="@Model.Search" asp-route-category="@Model.Category"><i class="bi bi-chevron-left"></i></a>
+                }
+                @for (int i = Math.Max(1, Model.Page - 2); i <= Math.Min(Model.TotalPages, Model.Page + 2); i++)
+                {
+                    @if (i == Model.Page)
+                    {
+                        <span class="active">@i</span>
+                    }
+                    else
+                    {
+                        <a asp-action="Products" asp-route-page="@i" asp-route-search="@Model.Search" asp-route-category="@Model.Category">@i</a>
+                    }
+                }
+                @if (Model.Page < Model.TotalPages)
+                {
+                    <a asp-action="Products" asp-route-page="@(Model.Page + 1)" asp-route-search="@Model.Search" asp-route-category="@Model.Category"><i class="bi bi-chevron-right"></i></a>
+                }
+            </div>
+        </div>
+    }
+</div>

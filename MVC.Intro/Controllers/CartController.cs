@@ -20,9 +20,9 @@ namespace MVC.Intro.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add(Guid id, int quantity = 1)
+        public async Task<IActionResult> Add(Guid id, int quantity = 1, Guid? variantId = null)
         {
-            var success = await _cartService.AddToCartAsync(id, quantity);
+            var success = await _cartService.AddToCartAsync(id, quantity, variantId);
             var cart = _cartService.GetCartViewModel();
 
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest" || Request.Headers.Accept.ToString().Contains("application/json"))
@@ -41,9 +41,13 @@ namespace MVC.Intro.Controllers
         }
 
         [HttpPost]
-        public IActionResult UpdateQuantity(Guid id, int quantity)
+        public IActionResult UpdateQuantity(Guid id, int quantity, string? cartKey = null)
         {
-            _cartService.UpdateQuantity(id, quantity);
+            if (!string.IsNullOrEmpty(cartKey))
+                _cartService.UpdateQuantity(cartKey, quantity);
+            else
+                _cartService.UpdateQuantity(id, quantity);
+
             var cart = _cartService.GetCartViewModel();
 
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
@@ -62,9 +66,13 @@ namespace MVC.Intro.Controllers
         }
 
         [HttpPost]
-        public IActionResult Remove(Guid id)
+        public IActionResult Remove(Guid id, string? cartKey = null)
         {
-            _cartService.RemoveFromCart(id);
+            if (!string.IsNullOrEmpty(cartKey))
+                _cartService.RemoveFromCart(cartKey);
+            else
+                _cartService.RemoveFromCart(id);
+
             var cart = _cartService.GetCartViewModel();
 
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")

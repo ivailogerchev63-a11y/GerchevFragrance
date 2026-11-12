@@ -1,0 +1,76 @@
+@{
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+    var user = ViewBag.User as MVC.Intro.Models.ApplicationUser;
+    var orders = ViewBag.Orders as List<MVC.Intro.Models.Order> ?? new();
+    ViewData["Title"] = "Клиент: " + (user?.Email ?? "");
+    ViewData["PageTitle"] = "Клиент: " + (user?.Email ?? "");
+}
+
+<div class="mb-4">
+    <a asp-action="Customers" class="btn-admin-outline"><i class="bi bi-arrow-left me-1"></i>Назад</a>
+</div>
+
+@if (user != null)
+{
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="admin-section">
+                <div class="admin-section-header"><h5><i class="bi bi-person me-2"></i>Профил</h5></div>
+                <div class="admin-section-body">
+                    <div class="mb-3">
+                        <div style="font-size:2rem;color:var(--gold);text-align:center;margin-bottom:12px;"><i class="bi bi-person-circle"></i></div>
+                        <div style="text-align:center;font-size:1rem;font-weight:600;">@(string.IsNullOrWhiteSpace($"{user.FirstName} {user.LastName}".Trim()) ? "—" : $"{user.FirstName} {user.LastName}")</div>
+                        <div style="text-align:center;color:var(--text-muted);font-size:0.85rem;">@user.Email</div>
+                    </div>
+                    <hr style="border-color:var(--dark-border);" />
+                    <div class="mb-2"><span class="form-label-gold">ID:</span><div style="font-size:0.75rem;color:var(--text-muted);word-break:break-all;">@user.Id</div></div>
+                    <div class="mb-2"><span class="form-label-gold">Поръчки:</span><div style="color:var(--gold);font-weight:700;font-size:1.2rem;">@orders.Count</div></div>
+                    <div><span class="form-label-gold">Похарчено общо:</span><div style="color:var(--gold);font-weight:700;">@orders.Sum(o => o.TotalAmount).ToString("F2") €</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="admin-section">
+                <div class="admin-section-header"><h5><i class="bi bi-bag me-2"></i>История на поръчките (@orders.Count)</h5></div>
+                @if (orders.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr><th>Номер</th><th>Сума</th><th>Статус</th><th>Дата</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var o in orders)
+                                {
+                                    <tr>
+                                        <td style="color:var(--gold);font-weight:600;font-size:0.82rem;">@o.OrderNumber</td>
+                                        <td style="color:var(--gold);">@o.TotalAmount.ToString("F2") €</td>
+                                        <td>
+                                            @{
+                                                var bc2 = o.Status switch {
+                                                    "Потвърдена" => "badge-confirmed",
+                                                    "Обработва се" => "badge-processing",
+                                                    "Изпратена" => "badge-shipped",
+                                                    "Доставена" => "badge-delivered",
+                                                    _ => "badge-cancelled"
+                                                };
+                                            }
+                                            <span class="badge-admin @bc2">@o.Status</span>
+                                        </td>
+                                        <td style="color:var(--text-muted);font-size:0.8rem;">@o.OrderDate.ToString("dd.MM.yyyy")</td>
+                                        <td><a asp-action="OrderDetails" asp-route-id="@o.Id" class="btn-admin-outline btn-admin-sm">→</a></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="admin-section-body" style="color:var(--text-muted);">Клиентът няма поръчки.</div>
+                }
+            </div>
+        </div>
+    </div>
+}

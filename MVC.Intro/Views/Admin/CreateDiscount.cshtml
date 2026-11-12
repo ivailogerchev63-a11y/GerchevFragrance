@@ -1,0 +1,48 @@
+@model AdminDiscountEditViewModel
+@{
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+    ViewData["Title"] = "Нов код за отстъпка";
+    ViewData["PageTitle"] = "Нов код за отстъпка";
+}
+
+<div class="mb-4"><a asp-action="Discounts" class="btn-admin-outline"><i class="bi bi-arrow-left me-1"></i>Назад</a></div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="admin-section">
+            <div class="admin-section-header"><h5>Нов код</h5></div>
+            <div class="admin-section-body">
+                <form method="post" asp-action="CreateDiscount">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label-gold">Код *</label>
+                        <input asp-for="Code" class="form-control-dark w-100" placeholder="напр. GERCHEV20" style="text-transform:uppercase;" />
+                        <span asp-validation-for="Code" class="text-danger" style="font-size:0.78rem;"></span>
+                        <small style="color:var(--text-muted);">Само главни букви, цифри, тире и долна черта.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-gold">Имейл на получателя *</label>
+                        <input asp-for="Email" class="form-control-dark w-100" type="email" />
+                        <span asp-validation-for="Email" class="text-danger" style="font-size:0.78rem;"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-gold">Отстъпка (%) *</label>
+                        <input asp-for="DiscountPercentage" type="number" step="1" min="1" max="100" class="form-control-dark w-100" />
+                        <span asp-validation-for="DiscountPercentage" class="text-danger" style="font-size:0.78rem;"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-gold">Изтичане *</label>
+                        <input asp-for="ExpiresAt" type="datetime-local" class="form-control-dark w-100" />
+                        <span asp-validation-for="ExpiresAt" class="text-danger" style="font-size:0.78rem;"></span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn-admin-gold"><i class="bi bi-check2 me-1"></i>Създаване</button>
+                        <a asp-action="Discounts" class="btn-admin-outline">Отказ</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

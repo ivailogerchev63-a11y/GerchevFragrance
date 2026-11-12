@@ -10,11 +10,16 @@ namespace MVC.Intro.Controllers
     {
         private readonly CartService _cartService;
         private readonly AppDbContext _context;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<CheckoutController> _logger;
 
-        public CheckoutController(CartService cartService, AppDbContext context)
+        public CheckoutController(CartService cartService, AppDbContext context,
+            IEmailService emailService, ILogger<CheckoutController> logger)
         {
             _cartService = cartService;
             _context = context;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -27,11 +32,17 @@ namespace MVC.Intro.Controllers
                 return RedirectToAction("Index", "Product");
             }
 
+            // Pre-fill customer info from authenticated user
             var model = new CheckoutViewModel
             {
                 Cart = cart,
                 CouponCode = cart.AppliedCouponCode
             };
+
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                model.CustomerEmail = User.Identity.Name ?? string.Empty;
+            }
 
             return View(model);
         }
@@ -40,11 +51,10 @@ namespace MVC.Intro.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PlaceOrder(CheckoutViewModel model)
         {
+            // Always re-load cart from server session — never trust client-submitted cart data
             var cart = _cartService.GetCartViewModel();
             if (!cart.Items.Any())
-            {
                 return RedirectToAction("Index", "Product");
-            }
 
             if (string.IsNullOrWhiteSpace(model.CustomerName) ||
                 string.IsNullOrWhiteSpace(model.CustomerEmail) ||
@@ -57,7 +67,7 @@ namespace MVC.Intro.Controllers
                 return View("Index", model);
             }
 
-            // Server-side validation of discount coupon
+            // Server-side discount validation
             decimal discountAmount = 0m;
             string? appliedCode = null;
             DiscountCoupon? couponToMark = null;
@@ -67,14 +77,12 @@ namespace MVC.Intro.Controllers
             {
                 if (couponCode == "GERCHEV10")
                 {
-                    // Look up coupon for this email
                     var normEmail = model.CustomerEmail.Trim().ToLowerInvariant();
                     couponToMark = await _context.DiscountCoupons
                         .Where(c => c.Code == "GERCHEV10" && !c.IsUsed && c.ExpiresAt > DateTime.UtcNow && c.Email.ToLower() == normEmail)
                         .OrderByDescending(c => c.CreatedAt)
                         .FirstOrDefaultAsync();
 
-                    // If not found by email, check if there's any active GERCHEV10 coupon
                     if (couponToMark == null)
                     {
                         couponToMark = await _context.DiscountCoupons
@@ -90,34 +98,36 @@ namespace MVC.Intro.Controllers
                     }
                     else
                     {
-                        // Allow welcome 10% discount on first order if requested with GERCHEV10
+                        // Apply standard 10% welcome discount
                         discountAmount = cart.Subtotal * 0.10m;
                         appliedCode = "GERCHEV10";
                     }
                 }
             }
 
-            var totalAmount = cart.GetOrderTotal(discountAmount);
+            var shippingFee = cart.ShippingFee;
+            var totalAmount = Math.Max(0, cart.Subtotal - discountAmount) + shippingFee;
             var orderNumber = "GF-" + DateTime.UtcNow.ToString("yyyyMMdd") + "-" + Random.Shared.Next(1000, 9999);
 
             var order = new Order
             {
                 Id = Guid.NewGuid(),
                 OrderNumber = orderNumber,
-                CustomerName = model.CustomerName,
-                CustomerEmail = model.CustomerEmail,
-                CustomerPhone = model.CustomerPhone,
-                ShippingAddress = model.ShippingAddress,
-                City = model.City,
-                PostalCode = model.PostalCode,
-                Notes = model.Notes,
+                CustomerName = model.CustomerName.Trim(),
+                CustomerEmail = model.CustomerEmail.Trim(),
+                CustomerPhone = model.CustomerPhone.Trim(),
+                ShippingAddress = model.ShippingAddress.Trim(),
+                City = model.City.Trim(),
+                PostalCode = model.PostalCode?.Trim(),
+                Notes = model.Notes?.Trim(),
                 PaymentMethod = model.PaymentMethod,
                 Subtotal = cart.Subtotal,
                 DiscountAmount = discountAmount,
                 AppliedCouponCode = appliedCode,
+                ShippingFee = shippingFee,
                 TotalAmount = totalAmount,
                 OrderDate = DateTime.UtcNow,
-                Status = "Confirmed"
+                Status = "Потвърдена"
             };
 
             foreach (var item in cart.Items)
@@ -130,6 +140,7 @@ namespace MVC.Intro.Controllers
                     ProductName = item.Name,
                     ProductBrand = item.Brand,
                     ImageUrl = item.ImageUrl,
+                    SelectedSize = item.Size,
                     UnitPrice = item.Price,
                     Quantity = item.Quantity
                 });
@@ -137,7 +148,6 @@ namespace MVC.Intro.Controllers
 
             _context.Orders.Add(order);
 
-            // Mark coupon as used after successful order
             if (couponToMark != null)
             {
                 couponToMark.IsUsed = true;
@@ -147,8 +157,16 @@ namespace MVC.Intro.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Clear the cart
+            // Clear cart BEFORE sending email to prevent double-clear issues
             _cartService.ClearCart();
+
+            // Send confirmation email (non-blocking - failure does not affect order)
+            var emailSent = await _emailService.SendOrderConfirmationAsync(order);
+            if (emailSent)
+            {
+                order.ConfirmationEmailSent = true;
+                await _context.SaveChangesAsync();
+            }
 
             return RedirectToAction(nameof(Confirmation), new { id = order.Id });
         }

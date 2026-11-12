@@ -1,0 +1,56 @@
+@model AdminNewsletterListViewModel
+@{
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+    ViewData["Title"] = "Бюлетин";
+    ViewData["PageTitle"] = "Бюлетин & Абонати";
+    var now = DateTime.UtcNow;
+}
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card"><div class="stat-label">Общо абонати</div><div class="stat-value">@Model.TotalSubscribers</div><i class="bi bi-people stat-icon"></i></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card"><div class="stat-label">Активни кодове</div><div class="stat-value" style="color:#48bb78;">@Model.ActiveCoupons</div><i class="bi bi-check2-circle stat-icon"></i></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card"><div class="stat-label">Използвани</div><div class="stat-value" style="color:var(--gold);">@Model.UsedCoupons</div><i class="bi bi-bag-check stat-icon"></i></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card"><div class="stat-label">Изтекли</div><div class="stat-value" style="color:#888;">@Model.ExpiredCoupons</div><i class="bi bi-clock stat-icon"></i></div>
+    </div>
+</div>
+
+<div class="admin-section">
+    <div class="admin-section-header">
+        <h5>Абонати / Кодове за GERCHEV10 (@Model.Subscribers.Count)</h5>
+        <a asp-action="CreateDiscount" class="btn-admin-outline btn-admin-sm"><i class="bi bi-plus me-1"></i>Нов код</a>
+    </div>
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr><th>Имейл</th><th>Код</th><th>Отстъпка</th><th>Създаден</th><th>Изтичане</th><th>Статус</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model.Subscribers)
+                {
+                    var statusBadge = c.IsUsed ? "badge-cancelled" : c.ExpiresAt <= now ? "badge-processing" : "badge-confirmed";
+                    var statusText = c.IsUsed ? "Използван" : c.ExpiresAt <= now ? "Изтекъл" : "Активен";
+                    <tr>
+                        <td style="font-size:0.82rem;">@c.Email</td>
+                        <td><strong style="color:var(--gold);">@c.Code</strong></td>
+                        <td><span class="badge-admin badge-confirmed">@c.DiscountPercentage.ToString("F0")%</span></td>
+                        <td style="font-size:0.78rem;color:var(--text-muted);">@c.CreatedAt.ToString("dd.MM.yyyy")</td>
+                        <td style="font-size:0.78rem;@(c.ExpiresAt <= now && !c.IsUsed ? "color:#e53e3e;" : "color:var(--text-muted);")">@c.ExpiresAt.ToString("dd.MM.yyyy")</td>
+                        <td><span class="badge-admin @statusBadge">@statusText</span></td>
+                    </tr>
+                }
+                @if (!Model.Subscribers.Any())
+                {
+                    <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px;">Няма абонати.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

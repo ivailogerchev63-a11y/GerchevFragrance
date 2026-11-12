@@ -423,3 +423,6 @@ FodyWeavers.xsd
 
 # Local marker file left by the old EUR price migration
 MVC.Intro/Database/.prices-in-eur
+
+# DB backups
+*.db.backup*

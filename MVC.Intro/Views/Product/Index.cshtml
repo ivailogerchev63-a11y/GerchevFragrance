@@ -1,4 +1,5 @@
 @model IEnumerable<MVC.Intro.Models.Product>
+@using MVC.Intro.Helpers
 @{
     ViewData["Title"] = "Колекция Парфюми";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -18,7 +19,7 @@
                 Нашата Колекция
             </h1>
             <hr class="divider-gold" style="width:80px; margin:20px auto;">
-            
+
             @if (!string.IsNullOrEmpty(searchTerm))
             {
                 <p style="color:#aaa; font-size:0.95rem;">
@@ -30,37 +31,37 @@
 
         <!-- Filter & Category Pills -->
         <div class="d-flex justify-content-center flex-wrap gap-2 mb-5">
-            <a asp-action="Index" 
+            <a asp-action="Index"
                class="btn btn-sm @(string.IsNullOrEmpty(currentCat) && string.IsNullOrEmpty(currentFilter) ? "btn-gold" : "btn-outline-gold")"
                style="font-size:0.75rem;">
                 Всички
             </a>
-            <a asp-action="Index" asp-route-category="Men" 
+            <a asp-action="Index" asp-route-category="Men"
                class="btn btn-sm @(currentCat == "Men" ? "btn-gold" : "btn-outline-gold")"
                style="font-size:0.75rem;">
                 Мъжки
             </a>
-            <a asp-action="Index" asp-route-category="Women" 
+            <a asp-action="Index" asp-route-category="Women"
                class="btn btn-sm @(currentCat == "Women" ? "btn-gold" : "btn-outline-gold")"
                style="font-size:0.75rem;">
                 Дамски
             </a>
-            <a asp-action="Index" asp-route-category="Unisex" 
+            <a asp-action="Index" asp-route-category="Unisex"
                class="btn btn-sm @(currentCat == "Unisex" ? "btn-gold" : "btn-outline-gold")"
                style="font-size:0.75rem;">
                 Унисекс
             </a>
-            <a asp-action="Index" asp-route-category="Luxury Fragrances" 
+            <a asp-action="Index" asp-route-category="Luxury Fragrances"
                class="btn btn-sm @(currentCat == "Luxury Fragrances" ? "btn-gold" : "btn-outline-gold")"
                style="font-size:0.75rem;">
-                Луксозни & Нишови
+                Луксозни &amp; Нишови
             </a>
-            <a asp-action="Index" asp-route-filter="bestsellers" 
+            <a asp-action="Index" asp-route-filter="bestsellers"
                class="btn btn-sm @(currentFilter == "bestsellers" ? "btn-gold" : "btn-outline-gold")"
                style="font-size:0.75rem;">
                 ✦ Бестселъри
             </a>
-            <a asp-action="Index" asp-route-filter="offers" 
+            <a asp-action="Index" asp-route-filter="offers"
                class="btn btn-sm @(currentFilter == "offers" ? "btn-gold" : "btn-outline-gold")"
                style="font-size:0.75rem;">
                 Промоции
@@ -79,6 +80,13 @@
             <div class="row g-4">
                 @foreach (var product in Model)
                 {
+                    var hasVariants = product.Variants != null && product.Variants.Any();
+                    var availableVariants = hasVariants
+                        ? product.Variants.Where(v => v.IsAvailable).OrderBy(v => v.SizeMl).ToList()
+                        : new List<MVC.Intro.Models.ProductVariant>();
+                    var startPrice = availableVariants.Any() ? availableVariants.Min(v => v.Price) : product.Price;
+                    var defaultVariant = availableVariants.FirstOrDefault();
+
                     <div class="col-lg-4 col-md-6">
                         <div class="product-card">
                             <div class="product-image-wrap">
@@ -90,14 +98,15 @@
                                 {
                                     <span class="badge-discount">-@product.DiscountPercentage%</span>
                                 }
-                                <img src="@product.ImageUrl" alt="@product.Name" onerror="this.src='/images/images.jpg'">
+                                <img src="@product.ImageUrl" alt="@product.Name" onerror="this.src='/images/Gemini_Generated_Image_8993a18993a18993.jpg'">
 
                                 <div class="card-actions-hover">
-                                    <a asp-action="Details" asp-route-id="@product.Id" 
+                                    <a asp-action="Details" asp-route-id="@product.Id"
                                        class="btn btn-outline-gold btn-sm flex-grow-1" style="font-size:0.7rem; padding:8px 12px;">
                                         Преглед
                                     </a>
-                                    <button type="button" class="btn btn-gold btn-sm" onclick="addToCart('@product.Id')" 
+                                    <button type="button" class="btn btn-gold btn-sm"
+                                            onclick="addToCart('@product.Id', 1, '@(defaultVariant?.Id.ToString() ?? "")')"
                                             title="Добави в количката" style="padding:8px 14px;">
                                         <i class="bi bi-bag-plus"></i>
                                     </button>
@@ -113,7 +122,18 @@
                                 </h3>
                                 <div class="product-meta">
                                     <span class="badge-concentration me-1">@product.Concentration</span>
-                                    <span>@product.Size</span>
+                                    @if (availableVariants.Count > 1)
+                                    {
+                                        <span style="color:#666; font-size:0.72rem;">@availableVariants.Count размера</span>
+                                    }
+                                    else if (availableVariants.Count == 1)
+                                    {
+                                        <span>@availableVariants[0].SizeMl ml</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@product.Size</span>
+                                    }
                                 </div>
 
                                 @if (!string.IsNullOrEmpty(product.Description))
@@ -124,11 +144,26 @@
                                 }
 
                                 <div class="product-price-row">
-                                    <span class="current-price">@CurrencyHelper.FormatEuro(product.Price)</span>
-                                    @if (product.HasDiscount)
-                                    {
-                                        <span class="original-price">@CurrencyHelper.FormatEuro(product.OriginalPrice!.Value)</span>
-                                    }
+                                    <div>
+                                        <span class="current-price">
+                                            @if (availableVariants.Count > 1)
+                                            {
+                                                <span style="font-size:0.75rem; font-weight:400; opacity:0.7;">от </span>
+                                            }
+                                            @startPrice.ToString("F2") €
+                                        </span>
+                                        @if (product.HasDiscount)
+                                        {
+                                            <span class="original-price">@product.OriginalPrice!.Value.ToString("F2") €</span>
+                                        }
+                                        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px; opacity:0.75;">
+                                            @if (availableVariants.Count > 1)
+                                            {
+                                                <span>от </span>
+                                            }
+                                            @CurrencyHelper.FormatBgn(startPrice)
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

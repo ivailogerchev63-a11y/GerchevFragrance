@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Admin | Gerchev Fragrance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --gold: #C9A84C;
+            --gold-light: #F3E5AB;
+            --dark: #0a0a0a;
+            --dark-card: #121212;
+            --dark-sidebar: #0d0d0d;
+            --dark-border: #242424;
+            --text-light: #f5f2eb;
+            --text-muted: #9e9a91;
+            --sidebar-width: 260px;
+        }
+        * { box-sizing: border-box; }
+        body { background: var(--dark); color: var(--text-light); font-family: 'Montserrat', sans-serif; font-weight: 400; margin: 0; }
+
+        /* ── Sidebar ── */
+        .admin-sidebar {
+            position: fixed; top: 0; left: 0; height: 100vh;
+            width: var(--sidebar-width); background: var(--dark-sidebar);
+            border-right: 1px solid var(--dark-border);
+            overflow-y: auto; z-index: 1000;
+            display: flex; flex-direction: column;
+        }
+        .sidebar-brand {
+            padding: 24px 20px 18px;
+            border-bottom: 1px solid var(--dark-border);
+        }
+        .sidebar-brand .brand-title { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 4px; color: var(--text-light); display: block; }
+        .sidebar-brand .brand-sub  { font-size: 0.6rem; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; }
+        .sidebar-label {
+            font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase;
+            color: var(--text-muted); padding: 20px 20px 8px;
+        }
+        .sidebar-nav { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav li a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 20px; color: #aaa; text-decoration: none;
+            font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;
+            transition: all 0.2s; border-left: 2px solid transparent;
+        }
+        .sidebar-nav li a:hover, .sidebar-nav li a.active {
+            color: var(--gold); background: rgba(201,168,76,0.07);
+            border-left-color: var(--gold);
+        }
+        .sidebar-nav li a i { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+        .sidebar-footer { margin-top: auto; padding: 20px; border-top: 1px solid var(--dark-border); }
+        .sidebar-footer a { color: #888; font-size: 0.8rem; text-decoration: none; }
+        .sidebar-footer a:hover { color: var(--gold); }
+
+        /* ── Main Content ── */
+        .admin-main { margin-left: var(--sidebar-width); min-height: 100vh; }
+        .admin-topbar {
+            background: var(--dark-card); border-bottom: 1px solid var(--dark-border);
+            padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 900;
+        }
+        .admin-topbar .page-title { font-family: 'Cinzel', serif; font-size: 1.1rem; letter-spacing: 2px; color: var(--text-light); }
+        .admin-topbar .breadcrumb { margin: 0; font-size: 0.78rem; color: var(--text-muted); }
+        .admin-topbar .breadcrumb a { color: var(--gold); text-decoration: none; }
+
+        .admin-content { padding: 28px; }
+
+        /* ── Cards / Stats ── */
+        .stat-card {
+            background: var(--dark-card); border: 1px solid var(--dark-border);
+            border-radius: 2px; padding: 22px 24px; position: relative; overflow: hidden;
+        }
+        .stat-card .stat-icon {
+            position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+            font-size: 2.4rem; opacity: 0.1; color: var(--gold);
+        }
+        .stat-card .stat-label { font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+        .stat-card .stat-value { font-family: 'Cinzel', serif; font-size: 1.9rem; color: var(--gold); font-weight: 600; }
+        .stat-card .stat-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+        /* ── Tables ── */
+        .admin-table { width: 100%; border-collapse: collapse; }
+        .admin-table thead th {
+            background: rgba(201,168,76,0.08); color: var(--text-muted);
+            font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase;
+            padding: 12px 16px; border-bottom: 1px solid var(--dark-border);
+            white-space: nowrap;
+        }
+        .admin-table tbody td {
+            padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.85rem; vertical-align: middle;
+        }
+        .admin-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+        .admin-table tbody tr:last-child td { border-bottom: none; }
+
+        /* ── Form controls ── */
+        .form-control-dark, .form-select-dark {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--dark-border);
+            color: var(--text-light); border-radius: 2px; padding: 10px 14px;
+        }
+        .form-control-dark:focus, .form-select-dark:focus {
+            background: rgba(255,255,255,0.08); border-color: var(--gold);
+            color: var(--text-light); box-shadow: 0 0 0 2px rgba(201,168,76,0.2);
+        }
+        .form-control-dark::placeholder { color: var(--text-muted); }
+        .form-label-gold { font-size: 0.72rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; display: block; }
+
+        /* ── Buttons ── */
+        .btn-admin-gold {
+            background: linear-gradient(135deg, var(--gold), #aa8533); color: #080808;
+            font-weight: 600; font-size: 0.75rem; letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 10px 22px; border: 1px solid var(--gold); border-radius: 2px;
+            transition: all 0.25s; cursor: pointer;
+        }
+        .btn-admin-gold:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-admin-outline {
+            background: transparent; color: var(--gold); border: 1px solid var(--gold);
+            font-size: 0.75rem; letter-spacing: 1px; padding: 8px 18px; border-radius: 2px; transition: all 0.25s;
+        }
+        .btn-admin-outline:hover { background: var(--gold); color: #000; }
+        .btn-admin-danger {
+            background: transparent; color: #e53e3e; border: 1px solid #e53e3e;
+            font-size: 0.75rem; padding: 8px 18px; border-radius: 2px; transition: all 0.25s;
+        }
+        .btn-admin-danger:hover { background: #e53e3e; color: #fff; }
+        .btn-admin-sm { padding: 5px 12px; font-size: 0.72rem; }
+
+        /* ── Section card ── */
+        .admin-section {
+            background: var(--dark-card); border: 1px solid var(--dark-border);
+            border-radius: 2px; overflow: hidden; margin-bottom: 24px;
+        }
+        .admin-section-header {
+            padding: 16px 20px; border-bottom: 1px solid var(--dark-border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .admin-section-header h5 {
+            font-family: 'Cinzel', serif; font-size: 0.85rem; letter-spacing: 2px;
+            color: var(--text-light); margin: 0;
+        }
+        .admin-section-body { padding: 20px; }
+
+        /* ── Badges ── */
+        .badge-admin { font-size: 0.68rem; letter-spacing: 1px; padding: 4px 10px; border-radius: 2px; }
+        .badge-confirmed { background: rgba(72,187,120,0.15); color: #48bb78; border: 1px solid rgba(72,187,120,0.3); }
+        .badge-processing { background: rgba(237,137,54,0.15); color: #ed8936; border: 1px solid rgba(237,137,54,0.3); }
+        .badge-shipped { background: rgba(99,179,237,0.15); color: #63b3ed; border: 1px solid rgba(99,179,237,0.3); }
+        .badge-delivered { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+        .badge-cancelled { background: rgba(229,62,62,0.15); color: #e53e3e; border: 1px solid rgba(229,62,62,0.3); }
+
+        /* ── Alerts ── */
+        .alert-admin-success { background: rgba(72,187,120,0.1); border: 1px solid rgba(72,187,120,0.3); color: #9ae6b4; border-radius: 2px; padding: 12px 16px; }
+        .alert-admin-error { background: rgba(229,62,62,0.1); border: 1px solid rgba(229,62,62,0.3); color: #feb2b2; border-radius: 2px; padding: 12px 16px; }
+
+        /* ── Pagination ── */
+        .admin-pagination { display: flex; gap: 6px; align-items: center; }
+        .admin-pagination a, .admin-pagination span {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 34px; height: 34px; background: var(--dark-card); border: 1px solid var(--dark-border);
+            color: #aaa; font-size: 0.8rem; text-decoration: none; border-radius: 2px;
+        }
+        .admin-pagination a:hover { border-color: var(--gold); color: var(--gold); }
+        .admin-pagination .active { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 700; }
+
+        /* ── Mobile ── */
+        @@media (max-width: 768px) {
+            .admin-sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+            .admin-sidebar.open { transform: translateX(0); }
+            .admin-main { margin-left: 0; }
+        }
+
+        /* ── Image preview ── */
+        .img-preview { max-width: 120px; max-height: 120px; object-fit: cover; border: 1px solid var(--dark-border); }
+
+        /* ── Toggle switch ── */
+        .form-switch .form-check-input { width: 2.5em; }
+
+        /* ── Gold divider ── */
+        .divider-gold { border: none; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin: 24px 0; }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="admin-sidebar" id="adminSidebar">
+        <div class="sidebar-brand">
+            <span class="brand-title">GERCHEV</span>
+            <span class="brand-sub">Администрация</span>
+        </div>
+
+        <div class="sidebar-label">Основно</div>
+        <ul class="sidebar-nav">
+            <li><a asp-controller="Admin" asp-action="Index" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                <i class="bi bi-speedometer2"></i> Табло
+            </a></li>
+        </ul>
+
+        <div class="sidebar-label">Каталог</div>
+        <ul class="sidebar-nav">
+            <li><a asp-controller="Admin" asp-action="Products" class="@(ViewContext.RouteData.Values["action"]?.ToString()?.StartsWith("Product") == true && ViewContext.RouteData.Values["action"]?.ToString() != "Products" ? "" : ViewContext.RouteData.Values["action"]?.ToString() == "Products" ? "active" : "")">
+                <i class="bi bi-box-seam"></i> Продукти
+            </a></li>
+            <li><a asp-controller="Admin" asp-action="Collections">
+                <i class="bi bi-collection"></i> Колекции & Начало
+            </a></li>
+        </ul>
+
+        <div class="sidebar-label">Продажби</div>
+        <ul class="sidebar-nav">
+            <li><a asp-controller="Admin" asp-action="Orders" class="@(ViewContext.RouteData.Values["action"]?.ToString()?.Contains("Order") == true ? "active" : "")">
+                <i class="bi bi-bag-check"></i> Поръчки
+            </a></li>
+            <li><a asp-controller="Admin" asp-action="Customers" class="@(ViewContext.RouteData.Values["action"]?.ToString()?.Contains("Customer") == true ? "active" : "")">
+                <i class="bi bi-people"></i> Клиенти
+            </a></li>
+            <li><a asp-controller="Admin" asp-action="Discounts" class="@(ViewContext.RouteData.Values["action"]?.ToString()?.Contains("Discount") == true ? "active" : "")">
+                <i class="bi bi-percent"></i> Отстъпки
+            </a></li>
+        </ul>
+
+        <div class="sidebar-label">Маркетинг</div>
+        <ul class="sidebar-nav">
+            <li><a asp-controller="Admin" asp-action="Newsletter" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Newsletter" ? "active" : "")">
+                <i class="bi bi-envelope-paper"></i> Бюлетин
+            </a></li>
+        </ul>
+
+        <div class="sidebar-label">Система</div>
+        <ul class="sidebar-nav">
+            <li><a asp-controller="Admin" asp-action="AuditLog" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "AuditLog" ? "active" : "")">
+                <i class="bi bi-journal-text"></i> Лог на действията
+            </a></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <a asp-controller="Home" asp-action="Index" target="_blank"><i class="bi bi-arrow-up-right-square me-1"></i>Към сайта</a>
+            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn p-0 ms-3" style="background:none;border:none;color:#888;font-size:0.8rem;" onmouseover="this.style.color='#e53e3e'" onmouseout="this.style.color='#888'">
+                    <i class="bi bi-box-arrow-right me-1"></i>Изход
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="admin-main">
+        <!-- Topbar -->
+        <div class="admin-topbar">
+            <div>
+                <span class="page-title">@ViewData["PageTitle"]</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span style="color:var(--text-muted);font-size:0.8rem;"><i class="bi bi-person-circle me-1"></i>@User.Identity?.Name</span>
+                <button class="btn d-md-none" id="sidebarToggle" onclick="document.getElementById('adminSidebar').classList.toggle('open')" style="color:#aaa;border:1px solid #333;padding:6px 10px;">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="admin-content pb-0 pt-3">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert-admin-success mb-3">
+                    <i class="bi bi-check2-circle me-2"></i>@TempData["SuccessMessage"]
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert-admin-error mb-3">
+                    <i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+                </div>
+            }
+        </div>
+
+        <!-- Page Content -->
+        <div class="admin-content">
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

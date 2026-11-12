@@ -8,7 +8,7 @@ namespace MVC.Intro
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +25,7 @@ namespace MVC.Intro
             });
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<CartService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
 
             // Database — absolute path relative to project root
             var dbFolder = Path.Combine(builder.Environment.ContentRootPath, "Database");
@@ -43,6 +44,7 @@ namespace MVC.Intro
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
             })
+            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<AppDbContext>();
 
             var app = builder.Build();
@@ -62,12 +64,21 @@ namespace MVC.Intro
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Seed database
+            // Apply pending migrations, then seed database
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                db.Database.EnsureCreated();
+                // Migrate() applies any pending migrations (including creating
+                // __EFMigrationsHistory if needed). It is safe to call repeatedly
+                // and does NOT conflict with an existing database.
+                db.Database.Migrate();
                 SeedData.Initialize(db);
+
+                // Seed Admin role and initial admin account
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+                await AdminSeedData.SeedAsync(roleManager, userManager, config);
             }
 
             app.MapControllerRoute(

@@ -1,0 +1,90 @@
+@{
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+    ViewData["Title"] = "Колекции & Начална страница";
+    ViewData["PageTitle"] = "Управление на начална страница";
+    var products = ViewBag.Products as List<MVC.Intro.Models.Product> ?? new();
+}
+
+<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:24px;">
+    Управлявайте кои продукти се показват в различните секции на началната страница. Промените влизат в сила незабавно.
+</p>
+
+<!-- Featured Product -->
+<div class="admin-section mb-4">
+    <div class="admin-section-header">
+        <h5><i class="bi bi-star me-2"></i>Hero / Препоръчан продукт</h5>
+        <span style="font-size:0.75rem;color:var(--text-muted);">Показва се в главния банер на началната страница</span>
+    </div>
+    <div class="admin-section-body">
+        <p style="font-size:0.82rem;color:var(--text-muted);">Текущ препоръчан продукт (IsFeatured = true):</p>
+        <div class="row g-3">
+            @foreach (var p in products.Where(p => p.IsFeatured))
+            {
+                <div class="col-md-4">
+                    <div style="background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.3);padding:14px;border-radius:2px;">
+                        <div style="font-weight:600;">@p.Name</div>
+                        <div style="font-size:0.75rem;color:var(--gold);">@p.Brand</div>
+                        <div class="mt-2 d-flex gap-1">
+                            <form method="post" asp-action="ToggleFeatured" asp-route-id="@p.Id">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-admin-danger btn-admin-sm">Премахни от Featured</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        @if (!products.Any(p => p.IsFeatured))
+        {
+            <p style="color:var(--text-muted);">Няма препоръчан продукт.</p>
+        }
+    </div>
+</div>
+
+<!-- Bestsellers -->
+<div class="admin-section mb-4">
+    <div class="admin-section-header">
+        <h5><i class="bi bi-trophy me-2"></i>Бестселъри</h5>
+        <span style="font-size:0.75rem;color:var(--text-muted);">Показват се в секция "Бестселъри"</span>
+    </div>
+    <div class="admin-section-body">
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead><tr><th>Продукт</th><th>Марка</th><th>Категория</th><th>Бестселър</th><th>Препоръчан</th></tr></thead>
+                <tbody>
+                    @foreach (var p in products.OrderBy(p => p.Brand).ThenBy(p => p.Name))
+                    {
+                        <tr>
+                            <td style="font-weight:600;font-size:0.85rem;">@p.Name</td>
+                            <td style="color:var(--gold);font-size:0.8rem;">@p.Brand</td>
+                            <td style="color:var(--text-muted);font-size:0.78rem;">@p.Category</td>
+                            <td>
+                                <form method="post" asp-action="ToggleBestseller" asp-route-id="@p.Id" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="@(p.IsBestseller ? "btn-admin-gold" : "btn-admin-outline") btn-admin-sm">
+                                        @(p.IsBestseller ? "★ Да" : "Не")
+                                    </button>
+                                </form>
+                            </td>
+                            <td>
+                                <form method="post" asp-action="ToggleFeatured" asp-route-id="@p.Id" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="@(p.IsFeatured ? "btn-admin-gold" : "btn-admin-outline") btn-admin-sm">
+                                        @(p.IsFeatured ? "★ Да" : "Не")
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Handle AJAX toggle for Bestseller/Featured
+    // Forms submit normally — results are reflected immediately after page reload
+</script>
+}

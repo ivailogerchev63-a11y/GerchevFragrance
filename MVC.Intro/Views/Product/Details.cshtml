@@ -1,8 +1,16 @@
 @model MVC.Intro.Models.Product
+@using MVC.Intro.Helpers
 @{
     ViewData["Title"] = Model.Name;
     Layout = "~/Views/Shared/_Layout.cshtml";
     var related = ViewBag.RelatedProducts as List<MVC.Intro.Models.Product>;
+    var hasVariants = Model.Variants != null && Model.Variants.Any();
+    var availableVariants = hasVariants
+        ? Model.Variants.Where(v => v.IsAvailable).OrderBy(v => v.SizeMl).ToList()
+        : new List<MVC.Intro.Models.ProductVariant>();
+    var defaultVariant = availableVariants.FirstOrDefault();
+    var defaultPrice = defaultVariant?.Price ?? Model.Price;
+    var defaultVariantId = defaultVariant?.Id ?? Guid.Empty;
 }
 
 <section style="padding: 60px 0 120px;">
@@ -31,7 +39,7 @@
                     }
                     <img src="@Model.ImageUrl" alt="@Model.Name"
                          style="width:100%; max-height:480px; object-fit:contain; filter:drop-shadow(0 15px 25px rgba(0,0,0,0.8));"
-                         onerror="this.src='/images/images.jpg'">
+                         onerror="this.src='/images/Gemini_Generated_Image_8993a18993a18993.jpg'">
                 </div>
             </div>
 
@@ -40,7 +48,7 @@
                 <p style="color:var(--gold); letter-spacing:4px; text-transform:uppercase; font-size:0.75rem; margin-bottom:8px; font-weight:600;">
                     @Model.Brand
                 </p>
-                <h1 style="font-family:var(--font-serif); font-size:clamp(2.2rem, 3.8vw, 3rem); color:#f0ead6; margin-bottom:16px;">
+                <h1 style="font-family:var(--font-serif); font-size:clamp(2.2rem, 3.8vw, 3rem); color:#f0ead6; margin-bottom:8px;">
                     @Model.Name
                 </h1>
 
@@ -48,10 +56,13 @@
                     <span class="badge-concentration" style="border:1px solid var(--gold); color:var(--gold); font-size:0.75rem; padding:4px 12px;">
                         @Model.Concentration
                     </span>
-                    <span style="color:#888; font-size:0.85rem;">Размер: @Model.Size</span>
-                    @if (Model.StockQuantity > 0)
+                    @if (!string.IsNullOrEmpty(Model.FragranceFamily))
                     {
-                        <span style="color:#6dbf67; font-size:0.85rem;">● В наличност (@Model.StockQuantity бр.)</span>
+                        <span style="color:#888; font-size:0.82rem; border:1px solid #333; padding:3px 10px;">@Model.FragranceFamily</span>
+                    }
+                    @if (Model.StockQuantity > 0 || availableVariants.Any())
+                    {
+                        <span style="color:#6dbf67; font-size:0.85rem;">● В наличност</span>
                     }
                     else
                     {
@@ -68,33 +79,65 @@
                 {
                     <div class="mb-4 p-3" style="background:var(--dark-card); border-left:2px solid var(--gold);">
                         <div style="color:var(--gold); font-size:0.72rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; font-weight:600;">
-                            Олфактивна Композиция:
+                            Олфактивна Пирамида:
                         </div>
                         <div style="color:#ccc; font-size:0.85rem; line-height:1.7;">
-                            @Model.Notes
+                            @foreach (var notePart in Model.Notes.Split('|'))
+                            {
+                                <div>@notePart.Trim()</div>
+                            }
                         </div>
                     </div>
                 }
 
-                <!-- Pricing -->
-                <div class="d-flex align-items-baseline gap-3 mb-4">
-                    <span style="font-family:var(--font-serif); font-size:2.5rem; color:var(--gold); font-weight:700;">
-                        @CurrencyHelper.FormatEuro(Model.Price)
-                    </span>
-                    @if (Model.HasDiscount)
-                    {
-                        <span style="color:#777; text-decoration:line-through; font-size:1.2rem;">
-                            @CurrencyHelper.FormatEuro(Model.OriginalPrice!.Value)
+                <!-- Size Selector -->
+                @if (availableVariants.Any())
+                {
+                    <div class="mb-4">
+                        <label style="color:#aaa; font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; display:block; margin-bottom:10px;">
+                            Изберете размер:
+                        </label>
+                        <div class="d-flex flex-wrap gap-2" id="sizeSelector">
+                            @foreach (var variant in availableVariants)
+                            {
+                                var isFirst = variant == availableVariants.First();
+                                <button type="button"
+                                        class="btn size-btn @(isFirst ? "size-btn-active" : "")"
+                                        data-variant-id="@variant.Id"
+                                        data-size="@variant.SizeMl ml"
+                                        data-price="@variant.Price.ToString("F2")"
+                                        data-has-discount="@(variant.HasDiscount ? "true" : "false")"
+                                        data-original-price="@(variant.OriginalPrice?.ToString("F2") ?? "")"
+                                        style="border:1px solid @(isFirst ? "var(--gold)" : "#444"); color:@(isFirst ? "var(--gold)" : "#888"); background:@(isFirst ? "rgba(201,168,76,0.1)" : "transparent"); padding:8px 20px; font-size:0.82rem; letter-spacing:1px; transition:all 0.2s;">
+                                    @variant.SizeMl ml
+                                    <span style="display:block; font-size:0.72rem; margin-top:2px; opacity:0.8;">@variant.Price.ToString("F2") €</span>
+                                    <span style="display:block; font-size:0.68rem; opacity:0.55;">@CurrencyHelper.FormatBgn(variant.Price)</span>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Pricing (dynamic) -->
+                <div class="mb-4" id="priceDisplay">
+                    <div class="d-flex align-items-baseline gap-3">
+                        <span id="currentPriceDisplay" style="font-family:var(--font-serif); font-size:2.5rem; color:var(--gold); font-weight:700;">
+                            @defaultPrice.ToString("F2") €
                         </span>
-                        <span class="badge bg-danger">Спестявате @CurrencyHelper.FormatEuro(Model.SavingsAmount)</span>
-                    }
+                        <span id="originalPriceDisplay" style="color:#777; text-decoration:line-through; font-size:1.2rem; display:@(defaultVariant?.HasDiscount == true ? "inline" : "none")">
+                            @(defaultVariant?.OriginalPrice?.ToString("F2") ?? "") €
+                        </span>
+                    </div>
+                    <div id="bgnPriceDisplay" style="color:#888; font-size:0.9rem; margin-top:4px;">
+                        @CurrencyHelper.FormatBgn(defaultPrice)
+                    </div>
                 </div>
 
-                <!-- Add to Cart Form -->
+                <!-- Quantity & Add to Cart Form -->
                 <div class="d-flex gap-3 align-items-center flex-wrap mb-4">
                     <div class="d-flex align-items-center" style="border:1px solid #444; background:var(--dark-card);">
                         <button type="button" class="btn text-white px-3" onclick="decrementQty()">−</button>
-                        <input type="number" id="detailQty" value="1" min="1" max="@Model.StockQuantity" 
+                        <input type="number" id="detailQty" value="1" min="1" max="10"
                                style="width:50px; text-align:center; background:none; border:none; color:var(--gold); font-weight:700;" readonly>
                         <button type="button" class="btn text-white px-3" onclick="incrementQty()">+</button>
                     </div>
@@ -131,15 +174,18 @@
                 <div class="row g-4 justify-content-center">
                     @foreach (var p in related)
                     {
+                        var relatedStartPrice = p.Variants.Any() ? p.Variants.Where(v => v.IsAvailable).Min(v => v.Price) : p.Price;
+                        var relatedDefaultVariant = p.Variants.Where(v => v.IsAvailable).OrderBy(v => v.SizeMl).FirstOrDefault();
                         <div class="col-md-4">
                             <div class="product-card">
                                 <div class="product-image-wrap">
-                                    <img src="@p.ImageUrl" alt="@p.Name" onerror="this.src='/images/images.jpg'">
+                                    <img src="@p.ImageUrl" alt="@p.Name" onerror="this.src='/images/Gemini_Generated_Image_8993a18993a18993.jpg'">
                                     <div class="card-actions-hover">
                                         <a asp-action="Details" asp-route-id="@p.Id" class="btn btn-outline-gold btn-sm flex-grow-1">
                                             Преглед
                                         </a>
-                                        <button type="button" class="btn btn-gold btn-sm" onclick="addToCart('@p.Id')">
+                                        <button type="button" class="btn btn-gold btn-sm"
+                                                onclick="addToCart('@p.Id', 1, '@(relatedDefaultVariant?.Id.ToString() ?? "")')">
                                             <i class="bi bi-bag-plus"></i>
                                         </button>
                                     </div>
@@ -152,10 +198,20 @@
                                         </a>
                                     </h4>
                                     <div class="product-meta">
-                                        <span>@p.Concentration · @p.Size</span>
+                                        <span>@p.Concentration</span>
                                     </div>
                                     <div class="product-price-row">
-                                        <span class="current-price">@CurrencyHelper.FormatEuro(p.Price)</span>
+                                        <span class="current-price">
+                                            @if (p.Variants.Any())
+                                            {
+                                                <span>от </span>
+                                            }
+                                            @relatedStartPrice.ToString("F2") €
+                                        </span>
+                                        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px; opacity:0.75;">
+                                            @if (p.Variants.Any()) { <span>от </span> }
+                                            @CurrencyHelper.FormatBgn(relatedStartPrice)
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -167,11 +223,57 @@
     </div>
 </section>
 
+<style>
+    .size-btn-active {
+        border-color: var(--gold) !important;
+        color: var(--gold) !important;
+        background: rgba(201,168,76,0.12) !important;
+    }
+    .size-btn:hover {
+        border-color: var(--gold) !important;
+        color: var(--gold) !important;
+        background: rgba(201,168,76,0.08) !important;
+    }
+</style>
+
 @section Scripts {
     <script>
+        var selectedVariantId = '@defaultVariantId';
+        var productId = '@Model.Id';
+
+        // Size selector logic
+        document.querySelectorAll('.size-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                // Update active state
+                document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('size-btn-active'));
+                this.classList.add('size-btn-active');
+
+                // Update selected variant
+                selectedVariantId = this.dataset.variantId;
+                var price = parseFloat(this.dataset.price);
+                var hasDiscount = this.dataset.hasDiscount === 'true';
+                var originalPrice = this.dataset.originalPrice;
+
+                // Update EUR price display
+                document.getElementById('currentPriceDisplay').textContent = price.toFixed(2) + ' €';
+
+                // Update BGN price display (1 EUR = 1.95583 BGN)
+                var bgn = (price * 1.95583).toFixed(2);
+                document.getElementById('bgnPriceDisplay').textContent = bgn + ' лв';
+
+                var origDisplay = document.getElementById('originalPriceDisplay');
+                if (hasDiscount && originalPrice) {
+                    origDisplay.textContent = originalPrice + ' €';
+                    origDisplay.style.display = 'inline';
+                } else {
+                    origDisplay.style.display = 'none';
+                }
+            });
+        });
+
         function incrementQty() {
             var val = parseInt($('#detailQty').val()) || 1;
-            $('#detailQty').val(val + 1);
+            if (val < 10) $('#detailQty').val(val + 1);
         }
         function decrementQty() {
             var val = parseInt($('#detailQty').val()) || 1;
@@ -179,7 +281,7 @@
         }
         function addCurrentProduct() {
             var qty = parseInt($('#detailQty').val()) || 1;
-            addToCart('@Model.Id', qty);
+            addToCart(productId, qty, selectedVariantId);
         }
     </script>
 }

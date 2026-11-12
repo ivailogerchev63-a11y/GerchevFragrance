@@ -5,12 +5,21 @@ namespace MVC.Intro.Models
         public Guid ProductId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Brand { get; set; } = string.Empty;
+
+        /// <summary>Price in EUR for the selected size</summary>
         public decimal Price { get; set; }
         public string? ImageUrl { get; set; }
+
+        /// <summary>The selected bottle size, e.g. "75 ml". Included in cart identity key.</summary>
         public string? Size { get; set; }
         public string? Concentration { get; set; }
         public int Quantity { get; set; } = 1;
         public decimal Subtotal => Price * Quantity;
+
+        /// <summary>
+        /// Composite identity key: same product in different sizes = different cart lines.
+        /// </summary>
+        public string CartKey => $"{ProductId}|{Size ?? "default"}";
     }
 
     public class CartViewModel

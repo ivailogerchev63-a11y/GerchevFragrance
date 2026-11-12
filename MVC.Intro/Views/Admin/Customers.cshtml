@@ -1,0 +1,68 @@
+@model AdminCustomerListViewModel
+@{
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+    ViewData["Title"] = "Клиенти";
+    ViewData["PageTitle"] = "Клиенти";
+}
+
+<div class="d-flex flex-wrap align-items-end gap-3 mb-4">
+    <form method="get" class="d-flex gap-2">
+        <input type="text" name="search" value="@Model.Search" class="form-control-dark" placeholder="Търсене по имейл или имена…" style="width:280px;" />
+        <button type="submit" class="btn-admin-gold">Търсене</button>
+        @if (!string.IsNullOrEmpty(Model.Search)) { <a asp-action="Customers" class="btn-admin-outline">Изчисти</a> }
+    </form>
+</div>
+
+<div class="admin-section">
+    <div class="admin-section-header">
+        <h5>Регистрирани клиенти (@Model.TotalCount)</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Имена</th>
+                    <th>Имейл</th>
+                    <th>Поръчки</th>
+                    <th>Похарчено</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model.Customers)
+                {
+                    <tr>
+                        <td>
+                            <div style="font-weight:600;font-size:0.85rem;">@(string.IsNullOrWhiteSpace(c.FullName) ? "—" : c.FullName)</div>
+                        </td>
+                        <td style="font-size:0.82rem;color:var(--text-muted);">@c.Email</td>
+                        <td>
+                            <span class="badge-admin @(c.OrderCount > 0 ? "badge-confirmed" : "")">@c.OrderCount</span>
+                        </td>
+                        <td style="color:var(--gold);">@c.TotalSpent.ToString("F2") €</td>
+                        <td><a asp-action="CustomerDetails" asp-route-id="@c.Id" class="btn-admin-outline btn-admin-sm">Профил</a></td>
+                    </tr>
+                }
+                @if (!Model.Customers.Any())
+                {
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">Няма намерени клиенти.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="admin-section-body d-flex justify-content-center">
+            <div class="admin-pagination">
+                @if (Model.Page > 1) { <a asp-action="Customers" asp-route-page="@(Model.Page-1)" asp-route-search="@Model.Search"><i class="bi bi-chevron-left"></i></a> }
+                @for (int i = Math.Max(1, Model.Page-2); i <= Math.Min(Model.TotalPages, Model.Page+2); i++)
+                {
+                    @if (i == Model.Page) { <span class="active">@i</span> }
+                    else { <a asp-action="Customers" asp-route-page="@i" asp-route-search="@Model.Search">@i</a> }
+                }
+                @if (Model.Page < Model.TotalPages) { <a asp-action="Customers" asp-route-page="@(Model.Page+1)" asp-route-search="@Model.Search"><i class="bi bi-chevron-right"></i></a> }
+            </div>
+        </div>
+    }
+</div>
