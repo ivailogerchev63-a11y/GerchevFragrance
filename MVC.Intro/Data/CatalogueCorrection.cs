@@ -28,7 +28,7 @@ namespace MVC.Intro.Data
             await AddMissingProductsAsync(db);
 
             // ── 3. Correct existing product data ──────────────────────────────────────
-            bool correctedProducts = await CorrectExistingProductsAsync(db);
+            await CorrectExistingProductsAsync(db);
             // Raw SQL — no SaveChangesAsync needed
 
             // ── 4. Correct existing variant prices ────────────────────────────────────
@@ -38,7 +38,10 @@ namespace MVC.Intro.Data
             // ── 5. Add YSL Y EDP if not present ───────────────────────────────────────
             await AddYslYEdpAsync(db);
 
-            // ── 6. Add missing variants to existing products ───────────────────────────
+            // ── 6. Clean any duplicate variants (idempotent, only deletes real dupes) ──
+            await CleanDuplicateVariantsAsync(db);
+
+            // ── 7. Add missing variants to existing products (safe — checks DB first) ──
             await AddMissingVariantsAsync(db);
         }
 
@@ -232,10 +235,9 @@ namespace MVC.Intro.Data
         // 2. Correct existing product metadata
         // ─────────────────────────────────────────────────────────────────────────────
 
-        private static async Task<bool> CorrectExistingProductsAsync(AppDbContext db)
+        private static async Task CorrectExistingProductsAsync(AppDbContext db)
         {
             var products = await db.Products.ToListAsync();
-            bool changed = false;
 
             foreach (var p in products)
             {
@@ -249,49 +251,38 @@ namespace MVC.Intro.Data
                 {
                     await db.Database.ExecuteSqlRawAsync(
                         $"UPDATE Products SET Notes = '{EscapeSql(correction.Notes)}' WHERE Id = '{id}'");
-                    changed = true;
                 }
                 if (correction.Description != null && p.Description != correction.Description)
                 {
                     await db.Database.ExecuteSqlRawAsync(
                         $"UPDATE Products SET Description = '{EscapeSql(correction.Description)}' WHERE Id = '{id}'");
-                    changed = true;
                 }
                 if (correction.FragranceFamily != null && p.FragranceFamily != correction.FragranceFamily)
                 {
                     await db.Database.ExecuteSqlRawAsync(
                         $"UPDATE Products SET FragranceFamily = '{EscapeSql(correction.FragranceFamily)}' WHERE Id = '{id}'");
-                    changed = true;
                 }
                 if (correction.Concentration != null && p.Concentration != correction.Concentration)
                 {
                     await db.Database.ExecuteSqlRawAsync(
                         $"UPDATE Products SET Concentration = '{EscapeSql(correction.Concentration)}' WHERE Id = '{id}'");
-                    changed = true;
                 }
                 if (correction.BasePrice.HasValue && p.Price != correction.BasePrice.Value)
                 {
                     var priceStr = correction.BasePrice.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
                     await db.Database.ExecuteSqlRawAsync(
                         $"UPDATE Products SET Price = {priceStr} WHERE Id = '{id}'");
-                    changed = true;
                 }
                 if (correction.RemoveOriginalPrice && p.OriginalPrice.HasValue)
                 {
                     await db.Database.ExecuteSqlRawAsync(
                         $"UPDATE Products SET OriginalPrice = NULL WHERE Id = '{id}'");
-                    changed = true;
                 }
             }
 
             // Detach all tracked products so subsequent operations work cleanly
-            if (changed)
-            {
-                foreach (var entry in db.ChangeTracker.Entries<Product>().ToList())
-                    entry.State = Microsoft.EntityFrameworkCore.EntityState.Detached;
-            }
-
-            return changed;
+            foreach (var entry in db.ChangeTracker.Entries<Product>().ToList())
+                entry.State = Microsoft.EntityFrameworkCore.EntityState.Detached;
         }
 
         private static string EscapeSql(string s) => s.Replace("'", "''");
@@ -376,7 +367,23 @@ namespace MVC.Intro.Data
         // ─────────────────────────────────────────────────────────────────────────────
 
         // ─────────────────────────────────────────────────────────────────────────────
-        // 5. Add missing variants to existing products
+        // 6. Clean duplicate variants (keeps first per ProductId+SizeMl combination)
+        // ─────────────────────────────────────────────────────────────────────────────
+
+        private static async Task CleanDuplicateVariantsAsync(AppDbContext db)
+        {
+            // Delete all but the first (by rowid) variant for each (ProductId, SizeMl) pair
+            await db.Database.ExecuteSqlRawAsync(@"
+                DELETE FROM ProductVariants
+                WHERE rowid NOT IN (
+                    SELECT MIN(rowid)
+                    FROM ProductVariants
+                    GROUP BY ProductId, SizeMl
+                )");
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────
+        // 7. Add missing variants — checks DB directly to avoid duplicates
         // ─────────────────────────────────────────────────────────────────────────────
 
         private static async Task AddMissingVariantsAsync(AppDbContext db)
@@ -385,7 +392,19 @@ namespace MVC.Intro.Data
 
             foreach (var product in products)
             {
-                var existingSizes = product.Variants.Select(v => v.SizeMl).ToHashSet();
+                // Re-read sizes directly from DB for accuracy
+                var conn = db.Database.GetDbConnection();
+                if (conn.State != System.Data.ConnectionState.Open)
+                    await conn.OpenAsync();
+
+                using var sizeCmd = conn.CreateCommand();
+                sizeCmd.CommandText = $"SELECT SizeMl FROM ProductVariants WHERE ProductId = '{product.Id}'";
+                using var sizeReader = await sizeCmd.ExecuteReaderAsync();
+                var existingSizes = new System.Collections.Generic.HashSet<int>();
+                while (await sizeReader.ReadAsync())
+                    existingSizes.Add(sizeReader.GetInt32(0));
+                sizeReader.Close();
+
                 var allExpected = SeedData.GetVariantsForPublic(product.Name, product.Brand ?? "");
 
                 foreach (var v in allExpected.Where(v => !existingSizes.Contains(v.SizeMl)))
@@ -399,7 +418,8 @@ namespace MVC.Intro.Data
 
                     await db.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF");
                     await db.Database.ExecuteSqlRawAsync(
-                        $"INSERT OR IGNORE INTO ProductVariants (Id, ProductId, SizeMl, Price, OriginalPrice, StockQuantity, IsAvailable) VALUES ('{id}', '{productId}', {v.SizeMl}, {priceStr}, {opStr}, {v.StockQuantity}, 1)");
+                        $"INSERT INTO ProductVariants (Id, ProductId, SizeMl, Price, OriginalPrice, StockQuantity, IsAvailable) " +
+                        $"VALUES ('{id}', '{productId}', {v.SizeMl}, {priceStr}, {opStr}, {v.StockQuantity}, 1)");
                     await db.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON");
                 }
             }
