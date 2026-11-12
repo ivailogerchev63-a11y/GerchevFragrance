@@ -24,24 +24,174 @@ namespace MVC.Intro.Data
             if (removedPlaceholders)
                 await db.SaveChangesAsync();
 
-            // ── 2. Correct existing product data ──────────────────────────────────────
+            // ── 2. Add missing products that weren't seeded yet ────────────────────────
+            await AddMissingProductsAsync(db);
+
+            // ── 3. Correct existing product data ──────────────────────────────────────
             bool correctedProducts = await CorrectExistingProductsAsync(db);
             // Raw SQL — no SaveChangesAsync needed
 
-            // ── 3. Correct existing variant prices ────────────────────────────────────
+            // ── 4. Correct existing variant prices ────────────────────────────────────
             await CorrectVariantPricesAsync(db);
             // Raw SQL — no SaveChangesAsync needed
 
-            // ── 4. Add new product: YSL Y EDP ─────────────────────────────────────────
+            // ── 5. Add YSL Y EDP if not present ───────────────────────────────────────
             await AddYslYEdpAsync(db);
 
-            // ── 5. Add missing variants to existing products ───────────────────────────
+            // ── 6. Add missing variants to existing products ───────────────────────────
             await AddMissingVariantsAsync(db);
         }
 
         // ─────────────────────────────────────────────────────────────────────────────
-        // 1. Remove placeholder products
+        // 2. Add missing products
         // ─────────────────────────────────────────────────────────────────────────────
+
+        private static async Task AddMissingProductsAsync(AppDbContext db)
+        {
+            // Full list of products that must exist.
+            // We INSERT OR IGNORE so this is fully idempotent.
+            // The UNIQUE match is by Name — we use INSERT OR IGNORE with a subquery check.
+
+            var required = new[]
+            {
+                new {
+                    Name = "Tom Ford Black Orchid",
+                    Description = "Смел и луксозен, Black Orchid е емблематичен тъмен флорален аромат от Tom Ford. Черен трюфел, гардения, иланг-иланг и черни орхидеи се сливат с мексикански шоколад, пачули и кехлибар в неповторима унисекс ароматна симфония.",
+                    Price = "150.00", OriginalPrice = "NULL",
+                    ImageUrl = "/images/tom ford black orchid.jpg",
+                    Brand = "Tom Ford", Size = "50 ml", Concentration = "EDP",
+                    StockQuantity = 10, Category = "Unisex",
+                    IsBestseller = 0, IsFeatured = 0,
+                    Notes = "Връхни: Черен трюфел, Гардения, Черен касис, Иланг-иланг | Сърце: Черна орхидея, Подправки, Плодови нотки, Лотос | База: Мексикански шоколад, Пачули, Ванилия, Тамян, Кехлибар, Сандалово дърво",
+                    FragranceFamily = "Флорален Ориенталски"
+                },
+                new {
+                    Name = "Carolina Herrera Good Girl",
+                    Description = "Контрастът между деня и нощта, между добродетелността и соблазна. Good Girl е смел дамски аромат в емблематичния флакон-обувка. Жасмин самбак и туберозата срещат кафе, тонка и какао в мощна флорална ориенталска интерпретация.",
+                    Price = "85.00", OriginalPrice = "NULL",
+                    ImageUrl = "/images/carolina herrera good girl.jpg",
+                    Brand = "Carolina Herrera", Size = "50 ml", Concentration = "EDP",
+                    StockQuantity = 15, Category = "Women",
+                    IsBestseller = 1, IsFeatured = 0,
+                    Notes = "Връхни: Бергамот, Лимон, Бадем, Кафе | Сърце: Туберозa, Жасмин Самбак, Ирис, Портокалов цвят | База: Боб тонка, Какао, Сандалово дърво, Ванилия",
+                    FragranceFamily = "Флорален Ориенталски"
+                },
+                new {
+                    Name = "Carolina Herrera Bad Boy Extreme",
+                    Description = "Смел, интензивен и провокативен. Bad Boy Extreme е по-тъмна, по-дълбока итерация на иконичния Bad Boy. Пикантен джинджифил, бергамот и какао абсолют се разкриват над богата основа от ветивер, пачули и боб тонка.",
+                    Price = "80.00", OriginalPrice = "NULL",
+                    ImageUrl = "/images/carrolina herrera bad boy extreme.jpg",
+                    Brand = "Carolina Herrera", Size = "50 ml", Concentration = "EDP",
+                    StockQuantity = 12, Category = "Men",
+                    IsBestseller = 0, IsFeatured = 0,
+                    Notes = "Връхни: Джинджифил, Бергамот | Сърце: Какао, Ветивер | База: Пачули, Боб тонка",
+                    FragranceFamily = "Дървесен Ориенталски"
+                },
+                new {
+                    Name = "Parfums de Marly Layton",
+                    Description = "Layton е бляскав мъжки аромат с прекрасна свежест, подчертана от богатство и елегантност. Пикантна ябълка, лавандула, бергамот и мандарина срещат виолетка, жасмин и геран в един от най-обичаните нишови аромати на нашето поколение.",
+                    Price = "225.00", OriginalPrice = "NULL",
+                    ImageUrl = "/images/parfums de marly layton.jpg",
+                    Brand = "Parfums de Marly", Size = "75 ml", Concentration = "EDP",
+                    StockQuantity = 10, Category = "Men",
+                    IsBestseller = 1, IsFeatured = 0,
+                    Notes = "Връхни: Бергамот, Лавандула, Ябълка, Мандарина | Сърце: Виолетка, Жасмин, Геран | База: Ванилия, Гуаяково дърво, Пачули, Розов пипер",
+                    FragranceFamily = "Дървесен Ориенталски"
+                },
+                new {
+                    Name = "Parfums de Marly Greenley",
+                    Description = "Greenley е свеж и чувствен зелен аромат от Parfums de Marly. Сицилиански бергамот, зелена ябълка и мандарина отварят с вибрираща свежест, сърцето разкрива кашмеран, кедър и виолетково листо, а основата от дъбов мъх, мускус и амберово дърво осигурява дълготрайна топлина.",
+                    Price = "225.00", OriginalPrice = "NULL",
+                    ImageUrl = "/images/parfums de marly greenley.jpg",
+                    Brand = "Parfums de Marly", Size = "75 ml", Concentration = "EDP",
+                    StockQuantity = 8, Category = "Unisex",
+                    IsBestseller = 0, IsFeatured = 0,
+                    Notes = "Връхни: Зелена ябълка, Сицилиански бергамот, Мандарина | Сърце: Кашмеран, Кедър, Поmarose, Виолетково листо | База: Дъбов мъх, Мускус, Амберово дърво",
+                    FragranceFamily = "Флорален Зелен"
+                },
+                new {
+                    Name = "Parfums de Marly Althaïr",
+                    Description = "Althaïr е смел и изискан ориенталски аромат от Parfums de Marly. Пикантно начало от канела, кардамон и бергамот се разкрива в топло сърце от бурбонска ванилия и елеми, а основата от амброксан, гуаяково дърво и пралине създава опияняващ, сладък и дълготраен шлейф.",
+                    Price = "225.00", OriginalPrice = "NULL",
+                    ImageUrl = "/images/parfums de marly althair.jpg",
+                    Brand = "Parfums de Marly", Size = "75 ml", Concentration = "EDP",
+                    StockQuantity = 8, Category = "Men",
+                    IsBestseller = 0, IsFeatured = 0,
+                    Notes = "Връхни: Бергамот, Портокалов цвят, Канела, Кардамон | Сърце: Бурбонска ванилия, Елеми | База: Амброксан, Гуаяково дърво, Пралине, Мускус",
+                    FragranceFamily = "Ориенталски Дървесен"
+                },
+                new {
+                    Name = "Parfums de Marly Delina Exclusif",
+                    Description = "Delina Exclusif е интензивна, по-богата и по-чувствена версия на легендарната Delina. Личи, круша и тамян отварят с екзотична свежест, сърцето разкрива дамаска роза и уд, а основата от ванилия и кехлибар осигурява луксозно дамско изражение.",
+                    Price = "305.00", OriginalPrice = "NULL",
+                    ImageUrl = "/images/parfums de marly - delina exclusif.jpg",
+                    Brand = "Parfums de Marly", Size = "75 ml", Concentration = "EDP",
+                    StockQuantity = 6, Category = "Women",
+                    IsBestseller = 1, IsFeatured = 0,
+                    Notes = "Връхни: Бергамот, Личи, Круша, Тамян | Сърце: Турска роза, Уд, Тамян | База: Ванилия, Кехлибар, Дървесни нотки",
+                    FragranceFamily = "Флорален Плодов"
+                },
+                new {
+                    Name = "Maison Francis Kurkdjian Baccarat Rouge 540",
+                    Description = "Baccarat Rouge 540 е ароматният феномен на нашето поколение. Роден от сътрудничеството между Maison Francis Kurkdjian и кристалната династия Baccarat, той съчетава шафран, жасмин, кедър и горчиви бадеми в прочут, дълготраен аромат с уникален светещ характер.",
+                    Price = "265.00", OriginalPrice = "NULL",
+                    ImageUrl = "/images/Maison Francis Kurkdjian Baccarat Rouge 540.jpg",
+                    Brand = "Maison Francis Kurkdjian", Size = "70 ml", Concentration = "EDP",
+                    StockQuantity = 5, Category = "Luxury Fragrances",
+                    IsBestseller = 1, IsFeatured = 0,
+                    Notes = "Връхни: Пресен жасмин, Шафран | Сърце: Кедърово дърво, Горчиви бадеми | База: Суров мускус, Дъбов мъх, Амбра, Ванилия",
+                    FragranceFamily = "Флорален Амберов"
+                },
+            };
+
+            foreach (var p in required)
+            {
+                // Check if already exists
+                var checkCmd = db.Database.GetDbConnection();
+                if (checkCmd.State != System.Data.ConnectionState.Open)
+                    await checkCmd.OpenAsync();
+
+                using var exists = checkCmd.CreateCommand();
+                exists.CommandText = $"SELECT COUNT(*) FROM Products WHERE Name = '{EscapeSql(p.Name)}'";
+                var count = (long)(await exists.ExecuteScalarAsync() ?? 0L);
+                if (count > 0) continue;
+
+                // Insert product
+                var id = Guid.NewGuid().ToString();
+                var notes = EscapeSql(p.Notes);
+                var description = EscapeSql(p.Description);
+                var name = EscapeSql(p.Name);
+                var brand = EscapeSql(p.Brand);
+                var imageUrl = EscapeSql(p.ImageUrl);
+                var size = EscapeSql(p.Size);
+                var concentration = EscapeSql(p.Concentration);
+                var category = EscapeSql(p.Category);
+                var fragranceFamily = EscapeSql(p.FragranceFamily);
+
+                await db.Database.ExecuteSqlRawAsync(
+                    $"INSERT INTO Products (Id, Name, Description, Price, OriginalPrice, ImageUrl, Brand, Size, Concentration, StockQuantity, Category, IsBestseller, IsFeatured, Notes, FragranceFamily) " +
+                    $"VALUES ('{id}', '{name}', '{description}', {p.Price}, {p.OriginalPrice}, " +
+                    $"'{imageUrl}', '{brand}', '{size}', '{concentration}', {p.StockQuantity}, " +
+                    $"'{category}', {p.IsBestseller}, {p.IsFeatured}, '{notes}', '{fragranceFamily}')");
+
+                // Insert variants
+                var variants = SeedData.GetVariantsForPublic(p.Name, p.Brand);
+                foreach (var v in variants)
+                {
+                    var vid = Guid.NewGuid().ToString();
+                    var priceStr = v.Price.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+                    var opStr = v.OriginalPrice.HasValue
+                        ? v.OriginalPrice.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
+                        : "NULL";
+
+                    await db.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF");
+                    await db.Database.ExecuteSqlRawAsync(
+                        $"INSERT OR IGNORE INTO ProductVariants (Id, ProductId, SizeMl, Price, OriginalPrice, StockQuantity, IsAvailable) " +
+                        $"VALUES ('{vid}', '{id}', {v.SizeMl}, {priceStr}, {opStr}, {v.StockQuantity}, 1)");
+                    await db.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON");
+                }
+            }
+        }
 
         private static async Task<bool> RemovePlaceholderProductsAsync(AppDbContext db)
         {
