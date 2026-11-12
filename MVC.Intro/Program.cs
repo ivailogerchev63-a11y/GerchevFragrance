@@ -73,6 +73,7 @@ namespace MVC.Intro
                 // and does NOT conflict with an existing database.
                 db.Database.Migrate();
                 SeedData.Initialize(db);
+                await CatalogueCorrection.ApplyAsync(db);
 
                 // Seed Admin role and initial admin account
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
